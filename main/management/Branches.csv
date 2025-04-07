@@ -1,0 +1,34 @@
+id,name,short_name
+1,Computer Science and Engineering,CSE
+2,Information Technology,IT
+3,Electronics and Communication Engineering,ECE
+4,Electrical and Electronics Engineering,EEE
+5,Mechanical Engineering,ME
+6,Civil Engineering,CE
+7,CSE Artificial Intelligence and Machine Learning,CSE-AIML
+8,CSE Data Science and Artificial Intelligence,CSE-DSAI
+9,CSE Artificial Intelligence,CSE-AI
+10,CSE Cyber Security,CSE-CS
+11,"CSE IoT, Cybersecurity and Blockchain",CSE-ICB
+12,CSE IoT,CSE-IOT
+13,CSE Networks,CSE-N
+14,Artificial Intelligence and Machine Learning,AIML
+15,Data Science and Artificial Intelligence,DSAI
+16,CSE Data Science,CSE-DS
+17,Electronics and Computer Engineering,ECE
+18,Biotechnology Engineering,BT
+19,Electronics and Computer Science,ECS
+20,Computer Science and Information Technology,CSIT
+21,Computer Science Technology,CST
+22,Electronics and Instrumentation Engineering,EIE
+23,Computer Science and Business Systems,CSBS
+24,Chemical Engineering,CHE
+25,Computer Applications,CA
+26,Computer Science and Design,CSD
+27,Computer Science and Systems Engineering,CSSE
+28,Computer and Communication Engineering,CCE
+29,Information Science,IS
+30,M.Tech Computer Science,M.Tech CSE
+31,M.Tech Electronics and Communication,M.Tech ECE
+32,Master of Computer Applications,MCA
+33,Master of Business Administration,MBA
