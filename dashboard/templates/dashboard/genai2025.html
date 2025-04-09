@@ -246,11 +246,11 @@
    <div class="cards-container">
        <div class="card">
            <h2>Onboarded Learners</h2>
-           <p>{{ learners_onboarded }}</p>
+           <p>{{ onboarded_count }}</p>
        </div>
        <div class="card">
            <h2>Active Learners</h2>
-           <p>{{ active_learners }}</p>
+           <p>{{ active_count }}</p>
        </div>
        <div class="card">
            <h2>Digital Badges</h2>
@@ -336,179 +336,175 @@
            <p>{{ college_completions }}</p>
        </div>
    </div> -->
-
-
-   <h2>
-
-
-   </h2>
    <div class="chart-container">
-       <canvas id="learnerChart"></canvas>
-   </div>
-  
-
-
-   <script>
-   var ctx = document.getElementById('learnerChart').getContext('2d');
-   var learnerChart = new Chart(ctx, {
-       type: 'bar',  // Specify the chart type (bar, line, etc.)
-       data: {
-       labels: ['Learners'],  // Labels for the X-axis (could be multiple if comparing across several colleges)
-       datasets: [
-           {
-               label: 'Onboarded Learners',
-               data: [{{ graph_onboarded }}],  // Data for Onboarded Learners
-               backgroundColor: 'rgba(120,120,120,1)',  // Bar color
-               borderColor: 'rgba(120,120,120, 1)',
-               borderWidth: 1,
-               barThickness: 60,
-               categoryPerccentage: 0.8,
-               barPercentage: 1
-           },
-           {
-               label: 'Active Learners',
-               data: [{{ graph_active_learners }}],  // Data for Onboarded Learners
-               //backgroundColor: 'rgba(106,90,205,1)',  // Bar color
-               backgroundColor: 'rgba(75,0,0,1)',
-               borderColor: 'rgba(72,0,0, 1)',
-               borderWidth: 1,
-               barThickness: 60,
-               categoryPerccentage: 0.8,
-               barPercentage: 1
-           },
-           {
-               label: 'Learner Completions',
-               data: [{{ graph_completions }}],  // Data for Learner Completions
-               backgroundColor: 'rgba(105,0,0,1)',  // Bar color
-               borderColor: 'rgba(96,0,0,1)',
-               borderWidth: 1,
-               barThickness: 60,
-               categoryPerccentage: 0.8,
-               barPercentage: 1
-           }
-       ]
-       },
-       options: {
-       responsive: true,
-       scales: {
-           y: {
-           beginAtZero: true
-           }
-       },
-       tooltips: {
-           titleFontsize: 30,
-           bodyFontsize: 27,
-           footerFontSize: 27
-       }
-       }
-   });
-   </script>
-   <div class="filters">
-    <form method="get" action="{% url 'dashboard:genai2025' %}">
-        <!-- Institution Name Input -->
-        <select name="institution_name">
-            <option value="">Select Institution</option>
-            {% for inst in all_institutions %}
-                <option value="{{ inst.name }}" {% if request.GET.institution_name == inst.name %}selected{% endif %}>
-                    {{ inst.name }}
-                </option>
+    <canvas id="learnerChart"></canvas>
+ </div>
+ 
+ <script>
+ var ctx = document.getElementById('learnerChart').getContext('2d');
+ var learnerChart = new Chart(ctx, {
+     type: 'bar',
+     data: {
+         labels: ['Learners'],
+         datasets: [
+             {
+                 label: 'Onboarded Learners',
+                 data: [{{ graph_onboarded }}],
+                 backgroundColor: 'rgba(120,120,120,1)',
+                 borderColor: 'rgba(120,120,120,1)',
+                 borderWidth: 1,
+                 barThickness: 60
+             },
+             {
+                 label: 'Active Learners',
+                 data: [{{ graph_active_learners }}],
+                 backgroundColor: 'rgba(75,0,0,1)',
+                 borderColor: 'rgba(72,0,0,1)',
+                 borderWidth: 1,
+                 barThickness: 60
+             },
+             {
+                 label: 'Learner Completions',
+                 data: [{{ graph_completions }}],
+                 backgroundColor: 'rgba(105,0,0,1)',
+                 borderColor: 'rgba(96,0,0,1)',
+                 borderWidth: 1,
+                 barThickness: 60
+             }
+         ]
+     },
+     options: {
+         responsive: true,
+         scales: {
+             y: {
+                 beginAtZero: true
+             }
+         },
+         plugins: {
+             tooltip: {
+                 titleFont: { size: 16 },
+                 bodyFont: { size: 14 },
+                 footerFont: { size: 12 }
+             }
+         }
+     }
+ });
+ </script>
+    
+ <!-- FILTER CONTROLS -->
+ <div style="max-width: 1200px; margin: 20px auto;">
+    <form id="filterForm">
+        <label for="institution">Institution:</label>
+        <select id="institution" name="institution">
+            <option value="">All</option>
+            {% for institution in institutions %}
+                <option value="{{ institution.name }}">{{ institution.name }}</option>
             {% endfor %}
         </select>
 
-        <!-- Onboarded Filter -->
-        <select name="onboarded">
-            <option value="">Filter by Onboarded</option>
-            <option value="200+" {% if request.GET.onboarded == "200+" %}selected{% endif %}>More than 200</option>
-            <option value="150+" {% if request.GET.onboarded == "150+" %}selected{% endif %}>More than 150</option>
-            <option value="100+" {% if request.GET.onboarded == "100+" %}selected{% endif %}>More than 100</option>
+        <label for="onboarded">Onboarded:</label>
+        <select id="onboarded" name="onboarded">
+            <option value="">All</option>
+            <option value="50">&gt; 50</option>
+            <option value="100">&gt; 100</option>
+            <option value="150">&gt; 150</option>
+            <option value="200">&gt; 200</option>
         </select>
 
-        <!-- Completion Filter -->
-        <select name="completion">
-            <option value="">Filter by Completion</option>
-            <option value="200+" {% if request.GET.completion == "200+" %}selected{% endif %}>More than 200</option>
-            <option value="150+" {% if request.GET.completion == "150+" %}selected{% endif %}>More than 150</option>
-            <option value="100+" {% if request.GET.completion == "100+" %}selected{% endif %}>More than 100</option>
+        <label for="completions">Completions:</label>
+        <select id="completions" name="completions">
+            <option value="">All</option>
+            <option value="50">&gt; 50</option>
+            <option value="100">&gt; 100</option>
+            <option value="150">&gt; 150</option>
+            <option value="200">&gt; 200</option>
         </select>
-
-        
-
-        <!-- Submit Button -->
-        <button class="rounded-dark-button" type="submit">Apply Filters</button>
     </form>
 </div>
+
+<!-- DATA TABLE -->
+<table style="max-width: 1200px; margin: 0 auto; border-collapse: collapse; width: 100%;">
+    <thead>
+        <tr>
+            <th>S.no</th>
+            <th>Institution</th>
+            <th>Onboarded</th>
+            <th>Active</th>
+            <th>Beginner</th>
+            <th>Intermediate</th>
+            <th>Advanced</th>
+            <th>Completions</th>
+            <th>Percent(%)</th>
+        </tr>
+    </thead>
+    <tbody id="dashboard-table-body">
+        {% for row in data %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ row.institution }}</td>
+            <td>{{ row.onboarded }}</td>
+            <td>{{ row.active }}</td>
+            <td>{{ row.beginner }}</td>
+            <td>{{ row.intermediate }}</td>
+            <td>{{ row.advanced }}</td>
+            <td>{{ row.completions }}</td>
+            <td>{{ row.percent }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- AJAX SCRIPT -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.getElementById("filterForm").addEventListener("submit", function(event) {
-        event.preventDefault(); // Prevent default form submission
-    
-        // Get form action URL and form data
-        const form = event.target;
-        const actionUrl = form.getAttribute("action");
-        const formData = new FormData(form);
-        const queryParams = new URLSearchParams(formData).toString();
-    
-        // Reload page with the filtered data
-        fetch(actionUrl + "?" + queryParams)
-            .then(response => response.text())
-            .then(html => {
-                document.open();
-                document.write(html);
-                document.close();
-    
-                // Reset the filter values
-                document.getElementById("institution_name").value = "";
-                document.getElementById("onboarded").value = "";
-                document.getElementById("completion").value = "";
-                document.getElementById("level").value = "";
-    
-                // Remove query parameters from the URL
-                window.history.replaceState({}, document.title, actionUrl);
-            });
+    $('#filterForm select').on('change', function () {
+        const formData = {
+            institution: $('#institution').val(),
+            onboarded: $('#onboarded').val(),
+            completions: $('#completions').val()
+        };
+
+        $.ajax({
+            url: "{% url 'dashboard:filter_genai2025_data' %}",
+            type: "GET",
+            data: formData,
+            cache: false,
+            success: function (response) {
+                const tbody = $('#dashboard-table-body');
+                tbody.empty();
+                if (response.data.length > 0) {
+                    response.data.forEach((row, index) => {
+                        tbody.append(`
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${row.institution}</td>
+                                <td>${row.onboarded}</td>
+                                <td>${row.active}</td>
+                                <td>${row.beginner}</td>
+                                <td>${row.intermediate}</td>
+                                <td>${row.advanced}</td>
+                                <td>${row.completions}</td>
+                                <td>${row.percent}</td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    tbody.append(`<tr><td colspan="9" style="text-align:center;">No data found</td></tr>`);
+                }
+            },
+            error: function () {
+                alert("Something went wrong. Try again!");
+            }
+        });
     });
-    </script>
-    
+</script>
 
 
 
 
-  
-  
 
-
-   <div>
-       <table>
-           <thead>
-               <tr>
-                   <th>S.no</th>
-                   <th>Institution</th>
-                   <th>Onboarded</th>
-                   <th>Active</th>
-                   <th>Beginner</th>
-                   <th>Intermediate</th>
-                   <th>Advanced</th>
-                   <th>Completions</th>
-                   <th>Percent(%)</th>
-               </tr>
-           </thead>
-           <tbody>
-               {% for college in colleges %}
-               <tr>
-                   <td>{{ forloop.counter }}</td>
-                   <td>{{ college.name }}</td>
-                   <td>{{ college.onboarded }}</td>
-                   <td>{{ college.active }}</td>
-                   <td>{{ college.beginner_completions }}</td>
-                   <td>{{ college.intermediate_completions }}</td>
-                   <td>{{ college.advanced_completions }}</td>
-                   <td>{{ college.completions }}</td>
-                   <td>{{ college.completions_ratio }}</td>
-               </tr>
-               {% endfor %}
-           </tbody>
-       </table>
-
-
-   </div>
+   
+   
 
 
 

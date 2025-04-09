@@ -224,3 +224,52 @@ class Learner_Program_Requirement(models.Model):
    program_requirement_code = models.ForeignKey(Program_Requirement, on_delete=models.CASCADE)
    value = models.CharField(max_length=255, null=True, blank=True)
 
+class Learner_Module_Progress(models.Model):
+    completed = models.BooleanField(default=False)
+    duration = models.IntegerField(null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+    learner_code = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    module_code = models.ForeignKey(Module, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.id} - Learner: {self.learner_code.name}, Module: {self.module_code.name}'
+
+
+class Learner_Course_Progress(models.Model):
+    completed = models.BooleanField(default=False)
+    duration = models.IntegerField(null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+    learner_code = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    course_code = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.id} - Learner: {self.learner_code.name}, Course: {self.course_code.name}'
+
+
+class Learner_Specialization_Progress(models.Model):
+    completed = models.BooleanField(default=False)
+    duration = models.IntegerField(null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+    learner_code = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    specialization_code = models.ForeignKey(Specialization, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.id} - Learner: {self.learner_code.name}, Specialization: {self.specialization_code.name}'
+
+
+class Learner_Program_Progress(models.Model):
+    is_enrolled= models.BooleanField(default=False)
+    is_onboarded= models.BooleanField(default=False)
+    is_active= models.BooleanField(default=False)
+    url = models.URLField(null=True, blank=True)
+    completed = models.BooleanField(default=False)
+    duration_hrs = models.IntegerField(null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
+    learner_code = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    program_code = models.ForeignKey(Program, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.id} - Learner: {self.learner_code.name}, Program: {self.program_code.name}'

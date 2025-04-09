@@ -10,6 +10,8 @@ from django.utils.timezone import make_aware
 from datetime import datetime
 from django.utils import timezone
 from django.db.models import Q
+from django.shortcuts import render
+from main.models import Learner_Program_Progress,Learner_Module_Progress,Learner_Course_Progress,Learner_Specialization_Progress
 
 
 
@@ -237,8 +239,116 @@ def l4g(request):
 
     return render(request, 'dashboard\l4g.html', context)
 
+
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from main.models import Learner_Program_Progress, Learner_Course_Progress, Learner_Education as le, Institution as ins
+
+
+
+
 def genai2025(request):
-    return render(request, 'dashboard\genai2025.html')
+    # Overall counts
+    onboarded_count = Learner_Program_Progress.objects.filter(program_code_id=2,is_onboarded=True).count()
+    active_count = Learner_Program_Progress.objects.filter(program_code_id=2,is_active=True).count()
+    completions_count = Learner_Program_Progress.objects.filter(program_code_id=2, completed=True).count()
+
+    beginner = Learner_Course_Progress.objects.filter(course_code_id=1, completed=True).count()
+    intermediate = Learner_Course_Progress.objects.filter(course_code_id=2, completed=True).count()
+    advanced = Learner_Course_Progress.objects.filter(course_code_id=3, completed=True).count()
+
+    learning_hours = (beginner * 8) + (intermediate * 15) + (advanced * 19)
+
+    institutions = ins.objects.all()
+    institution_data = get_filtered_institution_data()
+
+    context = {
+        'onboarded_count': onboarded_count,
+        'active_count': active_count,
+        'completions': completions_count,
+        'beginner': beginner,
+        'intermediate': intermediate,
+        'advanced': advanced,
+        'learning_hours': learning_hours,
+        'graph_onboarded': onboarded_count,
+        'graph_active_learners': active_count,
+        'graph_completions': completions_count,
+        'data': institution_data,
+        'institutions': institutions,
+    }
+
+    return render(request, 'dashboard/genai2025.html', context)
+
+
+def filter_genai2025_data(request):
+    institution_name = request.GET.get('institution')
+    onboarded_filter = request.GET.get('onboarded')
+    completions_filter = request.GET.get('completions')
+
+    try:
+        onboarded_filter = int(onboarded_filter) if onboarded_filter else None
+    except ValueError:
+        onboarded_filter = None
+
+    try:
+        completions_filter = int(completions_filter) if completions_filter else None
+    except ValueError:
+        completions_filter = None
+
+    data = get_filtered_institution_data(
+        institution_name=institution_name,
+        onboarded_filter=onboarded_filter,
+        completions_filter=completions_filter
+    )
+
+    return JsonResponse({'data': data})
+
+
+def get_filtered_institution_data(institution_name=None, onboarded_filter=None, completions_filter=None):
+    institutions = ins.objects.all()
+    if institution_name:
+        institutions = institutions.filter(name=institution_name)
+
+    institution_data = []
+
+    for institution in institutions:
+        learner_ids = le.objects.filter(institution_code=institution).values_list('learner_code', flat=True)
+        progress_qs = Learner_Program_Progress.objects.filter(learner_code__in=learner_ids)
+
+        onboarded = progress_qs.filter(is_onboarded=True).count()
+        active = progress_qs.filter(is_active=True).count()
+        completions = progress_qs.filter(completed=True).count()
+
+        beginner = Learner_Course_Progress.objects.filter(
+            learner_code__in=learner_ids, course_code_id=1, completed=True).count()
+        intermediate = Learner_Course_Progress.objects.filter(
+            learner_code__in=learner_ids, course_code_id=2, completed=True).count()
+        advanced = Learner_Course_Progress.objects.filter(
+            learner_code__in=learner_ids, course_code_id=3, completed=True).count()
+
+        # Apply filters
+        if onboarded_filter and onboarded < onboarded_filter:
+            continue
+        if completions_filter and completions < completions_filter:
+            continue
+
+        total = onboarded if onboarded else 1
+        percent = round((completions / total) * 100)
+
+        institution_data.append({
+            'institution': institution.name,
+            'onboarded': onboarded,
+            'active': active,
+            'beginner': beginner,
+            'intermediate': intermediate,
+            'advanced': advanced,
+            'completions': completions,
+            'percent': percent,
+        })
+
+    return sorted(institution_data, key=lambda x: x['onboarded'], reverse=True)
+
 
 
 #@login_required
