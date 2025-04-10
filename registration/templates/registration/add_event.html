@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Add New Event{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+    <script>
+        {% for message in messages %}
+            {% if message.tags == "success" %}
+                alert("{{ message }}");
+            {% endif %}
+        {% endfor %}
+    </script>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    {% if not show_form %}
+    <h2>Authenticate to Add Event</h2>
+
+    <div class="form-group">
+        <label for="auth_email">Email:</label>
+        <input type="email" name="auth_email" id="auth_email" required class="form-control">
+    </div>
+
+    <div class="form-group">
+        <label for="auth_password">Password:</label>
+        <input type="password" name="auth_password" id="auth_password" required class="form-control">
+    </div>
+
+    {% if errors.auth %}
+        <p style="color:red;">{{ errors.auth.0 }}</p>
+    {% endif %}
+
+    <button type="submit">Authenticate</button>
+
+    {% endif %}
+
+    {% if show_form %}
+    <h2>Add a New Event</h2>
+
+    <div class="form-group">
+        <label for="id_event_name">Event Name:</label>
+        {{ form.event_name }}
+    </div>
+
+
+    <div class="form-group">
+        <label for="id_datetime">Date & Time:</label>
+        {{ form.datetime }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_event_url">Event URL:</label>
+        {{ form.event_url }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_event_institution">Institution:</label>
+        {{ form.institution }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_venue">Venue:</label>
+        {{ form.venue }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_trainers">Trainers :</label>
+        {{ form.trainers }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_info">Event Information:</label>
+        {{ form.info }}
+    </div>
+
+    {% if errors %}
+        <div style="color: red; margin-top: 20px;">
+            <ul>
+                {% for field, error_list in errors.items %}
+                    {% for error in error_list %}
+                        <li><strong>{{ field|title }}</strong>: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <button type="submit">Submit</button>
+    {% endif %}
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<script>
+    $(document).ready(function () {
+        let institutionField = $("#id_institution");
+
+        institutionField.autocomplete({
+            source: "{% url 'registration:autocomplete_college' %}",
+            minLength: 2,
+            select: function (event, ui) {
+                institutionField.val(ui.item.value);
+                return false;
+            }
+        });
+    });
+</script>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#id_trainers').select2({
+            placeholder: 'Search for trainers...',
+            allowClear: true,
+            ajax: {
+                url: "{% url 'registration:search_trainers' %}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.results
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 1
+        });
+    });
+</script>
+
+{% endblock %}

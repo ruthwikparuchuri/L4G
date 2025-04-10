@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gemini Workshops Events</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.2);
+    }
+
+    .underline {
+      width: 600px;
+      max-width: 90%;
+      border-bottom: 1px solid #ffffffcc;
+      margin-bottom: 30px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    label, select, button {
+      margin-bottom: 15px;
+    }
+
+    select {
+      padding: 6px;
+      background-color: #1e1e1e;
+      color: white;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 8px 16px;
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #444;
+    }
+
+    .event-section {
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 40px;
+    }
+
+    .event-header {
+      background-color: #1f1f1f;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .event-header h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .event-details {
+      font-size: 14px;
+      margin-top: 5px;
+      color: #ccc;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+      background-color: #1f1f1f;
+    }
+
+    th, td {
+      border: 1px solid #444;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #333;
+    }
+
+    .no-learners {
+      color: #aaa;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gemini Workshops Events List</h1>
+  <div class="underline"></div>
+
+  <form method="POST">
+    {% csrf_token %}
+    <label for="trainer">Trainer ID:</label>
+    <select name="trainer" id="trainer">
+      <option value="">Select Trainer</option>
+      {% for trainer in trainers %}
+        <option value="{{ trainer.id }}" {% if trainer.id|stringformat:"s" == request.POST.trainer %}selected{% endif %}>
+          {{ trainer.empid }}{% if trainer.learner_code %} - {{ trainer.learner_code.name }}{% endif %}
+        </option>
+      {% endfor %}
+    </select>
+    <button type="submit">Submit</button>
+  </form>
+
+  {% if events %}
+    <h2>Events Assigned</h2>
+    {% for event in events %}
+      <div class="event-section">
+        <div class="event-header">
+          <h3>{{ event.event_name }} ({{ event.datetime }})</h3>
+          <div class="event-details">
+            <strong>Institution:</strong> {{ event.institution }} |
+            <strong>Venue:</strong> {{ event.venue }}
+          </div>
+        </div>
+
+        {% if event.learners %}
+          <table>
+            <thead>
+              <tr>
+                <th>Learner Name</th>
+                <th>Email</th>
+                <th>Program</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for learner in event.learners %}
+                <tr>
+                  <td>{{ learner.learner_code.name }}</td>
+                  <td>{{ learner.learner_code.email }}</td>
+                  <td>{{ learner.program_code.name }}</td>
+                  <td>
+                    {% if learner.completed %}
+                      ✅ Completed
+                    {% elif learner.is_active %}
+                      🔄 Active
+                    {% elif learner.is_onboarded %}
+                      📥 Onboarded
+                    {% elif learner.is_enrolled %}
+                      📝 Enrolled
+                    {% else %}
+                      ❌ Not Started
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="no-learners">No learners registered for this event.</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+</body>
+</html>

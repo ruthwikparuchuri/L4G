@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Add New Trainer{% endblock %}
+
+{% load static %}
+
+{% block content %}
+
+{% if messages %}
+    <script>
+        {% for message in messages %}
+            {% if message.tags == "success" %}
+                alert("{{ message }}");
+            {% endif %}
+        {% endfor %}
+    </script>
+{% endif %}
+
+
+
+<form method="post">
+    {% csrf_token %}
+    <h2>Add a New Trainer</h2>
+
+    <div class="form-group">
+        <label for="id_institution">Institution:</label>
+        <input type="text" id="id_institution_display" class="form-control" placeholder="Search Institution" required>
+        <input type="hidden" id="id_institution" name="institution_code">  <!-- Store ID -->
+    </div>
+
+    <div class="form-group">
+        <label for="id_learner">Trainer (Learner):</label>
+        <input type="text" id="id_learner_display" class="form-control" placeholder="Search Learner" required>
+        <input type="hidden" id="id_learner" name="learner_code">  <!-- Store ID -->
+    </div>
+
+    <div class="form-group">
+        <label for="id_emp_id">Employee ID:</label>
+        <input type="text" id="id_emp_id" name="empid" class="form-control" placeholder="Enter Employee ID" required>
+    </div>
+
+    <div class="form-group">
+        <label for="id_department_code">Department:</label>
+        {{ form.department_code }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_designation_code">Designation (Trainer Role):</label>
+        {{ form.designation_code }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_year_of_joining">Year of Joining:</label>
+        {{ form.year_of_joining }}
+    </div>
+
+    
+    {% if messages %}
+    <div id="message-container">
+        {% for message in messages %}
+            {% if message.tags == "error" %}
+                <div style='color:red'>{{ message }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if errors %}
+        <div style="color: red; margin-top: 20px;">
+            <ul>
+                {% for field, error_list in errors.items %}
+                    {% for error in error_list %}
+                        <li><strong>{{ field|title }}</strong>: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    
+
+    <button type="submit" >Submit</button>
+</form>
+
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<script>
+    $(document).ready(function () {
+        let institutionField = $("#id_institution_display");
+        let learnerField = $("#id_learner_display");
+    
+        // Institution Autocomplete
+        institutionField.autocomplete({
+            source: "{% url 'registration:autocomplete_college' %}",
+            minLength: 2,
+            select: function (event, ui) {
+                $("#id_institution").val(ui.item.value);  // Store institution ID
+                institutionField.val(ui.item.label);  // Show name
+                learnerField.val("");  // Clear learner field
+                $("#id_learner").val("");
+                return false;
+            }
+        });
+    
+        // Learner Autocomplete (Filtered by Institution)
+        learnerField.autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: "{% url 'registration:autocomplete_learner' %}",
+                    data: { 
+                        term: request.term,
+                        institution: $("#id_institution").val()
+                    },
+                    success: function (data) {
+                        response(data);
+                    }
+                });
+            },
+            minLength: 1,
+            select: function (event, ui) {
+                $("#id_learner").val(ui.item.value);  // Store learner ID
+                learnerField.val(ui.item.value);  // Show name
+                return false;
+            }
+        });
+    });
+    
+</script>
+
+{% endblock %}

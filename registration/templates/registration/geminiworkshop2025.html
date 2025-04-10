@@ -1,0 +1,475 @@
+  
+
+{% extends "base.html" %}
+
+{% block title %}Learner Registration Gemini Workshop{% endblock %}
+
+{% load static %}
+
+{% block content %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<script>
+    $(document).ready(function () {
+        let emailField = $('#id_email');
+        let rollnoField = $('#id_rollno');
+        let emailError = $("#email_error");
+        let rollnoError = $("#rollno_error");
+        let rollnoErrorMain = $('#rollno_errormain');
+        let collegeField = $('#id_student_college'); 
+        let newCollegeField = $('#new_college'); 
+        let errorElement = $('#college_error'); 
+        let gcUrlField = $('#id_url');  
+        let gcUrlContainer = $('#google_cloud_url_container');
+        let institutionField = $('#id_institution'); 
+        let eventField = $('#id_event');
+
+        let rollno = $('#id_rollno').val();
+        let email = $('#id_email').val();
+        let form = $(this);
+
+        collegeField.autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: "{% url 'registration:autocomplete_college' %}",  
+                    data: { term: request.term },
+                    success: function (data) {
+                        response(data);
+                    }
+                });
+            },
+            minLength: 2,  
+            select: function (event, ui) {
+                collegeField.val(ui.item.value);
+                newCollegeField.hide().removeAttr("required");
+                errorElement.text("").hide();
+                return false;
+            }
+        });
+
+        function checkCollegeExists(college, callback) {
+            if (!college) {
+                errorElement.text("College name is required.").css("color", "red").show();
+                return callback(false);
+            }
+
+            $.ajax({
+                url: "{% url 'registration:validate_college' %}",
+                data: { term: college },
+                success: function (response) {
+                    if (response.exists === true) {  
+                        errorElement.text("").hide();  
+                        callback(true);
+                    } else {
+                        errorElement.text("Invalid College name. Please select a valid college.")
+                            .css("color", "red").show();
+                        callback(false);
+                    }
+                }
+            }).fail(function () {
+                console.error("Error checking college name.");
+            });
+        }
+
+        collegeField.on("change", function () {
+            let selectedCollege = $(this).val().trim().toLowerCase();
+            if (selectedCollege === "other") {
+                newCollegeField.show().attr("required", true);
+                errorElement.text("").hide();
+            } else {
+                newCollegeField.hide().removeAttr("required");
+                checkCollegeExists(selectedCollege, function () {});
+            }
+        });
+
+        emailField.on('blur', function () {
+            let email = $(this).val().trim();
+            if (email) {
+                $.ajax({
+                    url: "{% url 'registration:validate_ai_email' %}",
+                    data: { email: email },
+                    success: function (data) {
+                        if (data.is_taken) {
+                            emailError.text("Email already exists. You are an existing learner.")
+                                      .css("color", "green").show();
+                        } else if (!data.is_valid) {
+                            emailError.text("Invalid Email. It must contain '.ai@gmail.com' before the domain.")
+                                      .css("color", "red").show();
+                        } else {
+                            emailError.text("").hide();
+                        }
+                    }
+                }).fail(function () {
+                    console.error("Error validating email.");
+                });
+            } else {
+                emailError.text("").hide();
+            }
+        });
+
+        rollnoField.on("blur", function () {
+            let rollno = $(this).val().trim();
+            let college = $("#id_student_college").val().trim();
+        
+            if (rollno && college) {
+                $.ajax({
+                    url: "{% url 'registration:validate_rollno' %}",
+                    data: {
+                        rollno: rollno,
+                        college: college
+                    },
+                    success: function (data) {
+                        if (!data.is_valid_format) {
+                            rollnoError
+                                .text("Invalid roll number format for the selected college.")
+                                .css("color", "red")
+                                .show();
+                        } else if (data.is_taken) {
+                            rollnoError
+                                .text("Roll Number already exists. You have an existing learner education.")
+                                .css("color", "orange")
+                                .show();
+                        } else {
+                            rollnoError
+                                .text("")
+                                .css("color", "green")
+                                .show();
+                        }
+                    },
+                    error: function () {
+                        console.error("Error validating roll number.");
+                        rollnoError.text("Server error while validating roll number.").css("color", "red").show();
+                    }
+                });
+            } else {
+                rollnoError.text("").hide();
+            }
+        });
+
+        function checkPR2Exists(email) {
+            $.ajax({
+                url: "{% url 'registration:check_pr2' %}",  
+                data: { email: email },
+                success: function (data) {  
+                    if (data.has_pr2) {
+                        gcUrlContainer.hide();
+                        gcUrlField.val("").prop("required", false);
+                    } else {
+                        gcUrlContainer.show();
+                        gcUrlField.prop("required", true);
+                    }
+                }
+            }).fail(function () {
+                console.error("Error checking PR2 requirement.");
+            });
+        }
+
+        emailField.on('blur', function () {
+            let email = $(this).val().trim();
+            if (email) {
+                checkPR2Exists(email);
+            }
+        });
+
+        $("#id_url").on("blur", function () {
+            let url = $(this).val();
+            if (url) {
+                $.ajax({
+                    url: "{% url 'registration:validate_url' %}",
+                    data: { url: url },
+                    success: function (data) {
+                        let url_error = $("#url_error");
+                        if (data.is_taken) {
+                            url_error.text("This URL already exists. Please use a different URL.").css("color", "red").show();
+                        } else if (!data.is_valid) {
+                            url_error.text("Invalid Google Skills Boost Public Profile URL. It should look like  https://www.cloudskillsboost.google/public_profiles/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx").css("color", "red").show();
+                        } else {
+                            url_error.text("").hide();
+                        }
+                    },
+                    error: function () {
+                        $("#url_error").text("Error validating URL. Try again.").css("color", "red").show();
+                    }
+                });
+            }
+        });
+
+        $("#id_developer_url").on("blur", function () {
+            let url = $(this).val();
+            if (url) {
+                $.ajax({
+                    url: "{% url 'registration:validate_developer_url' %}",
+                    data: { url: url },
+                    success: function (data) {
+                        let errorElement = $("#developer_url_error");
+                        if (data.is_taken) {
+                            errorElement.text("This Developer Profile URL already exists. Use a different URL.").css("color", "red").show();
+                        } else if (!data.is_valid) {
+                            errorElement.text("Invalid Developer Profile URL. It should look like 'https://developers.google.com/profile/u/xxxxxxxxxx'.").css("color", "red").show();
+                        } else {
+                            errorElement.text("").hide();
+                        }
+                    },
+                    error: function () {
+                        $("#developer_url_error").text("Error validating Developer URL. Try again.").css("color", "red").show();
+                    }
+                });
+            }
+        });
+        
+        
+        
+        // Fetch events based on institution selection
+        $("#id_student_college").on("change", function () {
+            let collegeName = $(this).val().trim();
+            let eventDropdown = $("#id_event");
+    
+            eventDropdown.empty();  // Clear previous options
+            eventDropdown.append('<option value="">-- Select an Event --</option>');
+    
+            if (collegeName !== "") {
+                $.ajax({
+                    url: "{% url 'registration:fetch_events' %}",  
+                    data: { college: collegeName },
+                    success: function (data) {
+                        if (data.events.length > 0) {
+                            $.each(data.events, function (index, event) {
+                                eventDropdown.append(`<option value="${event.id}">${event.event_name}</option>`);
+                            });
+                        } else {
+                            eventDropdown.append('<option value="">No Ongoing are events available</option>');
+                        }
+                    },
+                    error: function () {
+                        console.error("Error fetching events.");
+                        eventDropdown.append('<option value="">Error loading events</option>');
+                    }
+                });
+            }
+        });
+
+    });
+
+
+    
+
+   
+    
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let form = document.getElementById('registration-form');
+        let errorMessage = document.getElementById("error-message");
+
+        let confirmationShown = false; // Prevent repeated confirmation
+
+        form.addEventListener("submit", function (event) {
+            if (!confirmationShown) {
+                event.preventDefault();
+                let requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
+                let isValid = true;
+
+                requiredFields.forEach(function (field) {
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        field.style.border = "2px solid red";
+                    } else {
+                        field.style.border = "";
+                    }
+                });
+
+                if (!isValid) {
+                    errorMessage.textContent = "Please fill in all mandatory fields.";
+                    errorMessage.style.display = "block";
+                    return false;
+                } else {
+                    errorMessage.style.display = "none";
+
+                    let summaryHtml = getFormSummary();
+
+                    let confirmBox = document.createElement("div");
+                    confirmBox.style.position = "fixed";
+                    confirmBox.style.top = "50%";
+                    confirmBox.style.left = "50%";
+                    confirmBox.style.transform = "translate(-50%, -50%)";
+                    confirmBox.style.background = "#fff";
+                    confirmBox.style.border = "2px solid #333";
+                    confirmBox.style.padding = "20px";
+                    confirmBox.style.zIndex = "1000";
+                    confirmBox.style.maxHeight = "80vh";
+                    confirmBox.style.overflowY = "auto";
+                    confirmBox.style.width = "400px";
+                    confirmBox.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+                    confirmBox.innerHTML = `
+                        <h3>Please confirm your details:</h3>
+                        ${summaryHtml}
+                        <div style="text-align: right; margin-top: 20px;">
+                            <button id="confirmBtn" style="margin-right: 10px;">Confirm</button>
+                            <button id="cancelBtn">Cancel</button>
+                        </div>
+                    `;
+
+                    document.body.appendChild(confirmBox);
+
+                    document.getElementById("confirmBtn").onclick = function () {
+                        confirmBox.remove();
+                        confirmationShown = true;
+                        form.submit();
+                    };
+
+                    document.getElementById("cancelBtn").onclick = function () {
+                        confirmBox.remove();
+                    };
+                }
+            }
+        });
+    });
+
+    function getFormSummary() {
+        let fields = [
+            { label: "Name", value: $("#id_name").val() },
+            { label: "Gender", value: $("#id_gender").val() },
+            { label: "Type", value: $("#id_type").val() },
+            { label: "Date of Birth", value: $("#id_date_of_birth").val() },
+            { label: "Phone", value: $("#id_phone").val() },
+            { label: "Roll Number", value: $("#id_rollno").val() },            
+            { label: "Email", value: $("#id_email").val() },
+            { label: "College", value: $("#id_student_college").val() },
+            { label: "New College (if any)", value: $("#new_college").val() },            
+            { label: "Branch", value: $("#id_branch option:selected").text() },
+            { label: "Event", value: $("#id_event option:selected").text() },            
+            { label: "YOJ", value: $("#id_yoj").val() },
+            { label: "YOG", value: $("#id_yog").val() },
+            { label: "GCSB URL", value: $("#id_url").val() },
+            { label: "Developer URL", value: $("#id_developer_url").val() },
+            { label: "Internet Access", value: $("#id_internet").val() },
+            { label: "Consent", value: $("#id_consent").val() },
+        ];
+
+        let html = "<ul>";
+        fields.forEach(field => {
+            if (field.value && field.value.trim() !== "") {
+                html += `<li><strong>${field.label}:</strong> ${field.value}</li>`;
+            }
+        });
+        html += "</ul>";
+        return html;
+    }
+</script>
+
+
+<form method="post" id='registration-form' novalidate>
+    {% csrf_token %}
+
+    <h1>{{ program_title }}</h1>
+    <h2>Registration Form</h2>
+
+
+    Dear Learner, <br>Your participation adds value to this program, and by enrolling, you commit to participating in and completing the course content within the specified timeline.
+
+    
+
+    <p>For support, contact us at <b>trainings@l4g.in</b></p>
+
+    <fieldset>
+        <legend><h3>Basic Information</h3></legend>
+        {{ form.name.label_tag }} {{ form.name }}
+        {{ form.gender.label_tag }} {{ form.gender }}
+        {{ form.type.label_tag }} {{ form.type }}
+        {{ form.date_of_birth.label_tag }} {{ form.date_of_birth }}
+        {{ form.phone.label_tag }} {{ form.phone }}
+    </fieldset>
+
+    <fieldset>
+        <legend><h3>Academic Information</h3></legend>
+        
+        {{ form.college.label_tag }} {{ form.college }}
+        <span>Select / Type 'Other' if your college is not listed</span>
+        <input type="text" id="new_college" name="new_college" placeholder="Enter your college name" style="display:none;">
+
+        {{ form.event.label_tag }}{{ form.event }}
+
+        {{ form.rollno.label_tag }} {{ form.rollno }}
+        <p id='rollno_error'></p>
+        {{ form.section.label_tag }} {{ form.section  }}
+        {{ form.branch.label_tag }} {{ form.branch }}
+        {{ form.yoj.label_tag }} {{ form.yoj }}
+        {{ form.yog.label_tag }} {{ form.yog }}
+    </fieldset>
+    <p id="college_error" style="display: none; color: red;"></p>
+
+    <fieldset>
+        <legend><h3>Program Requirements</h3></legend>
+        
+        {{ form.email.label_tag }} {{ form.email }}
+
+        <div id="google_cloud_url_container" style="display: none;">
+
+            <fieldset>
+                <legend><h3>Mandatory Program Requirements</h3></legend>
+                <p>
+                    In order to take part in the program, you would need a Google Cloud Skills Boost account. Please use the instructions below to create an account and share your profile so that we can track your progress in the program.<br>
+                    Navigate to <a href='https://www.cloudskillsboost.google/' target='blank'>https://www.cloudskillsboost.google/</a><br>
+                    Click on "Join" & create an account using the email address you mentioned in this form.
+                    (Creating an account is always free!)
+                </p>
+ 
+ 
+                <p>
+                    Great! You have a Google Cloud Skills Boost account. Please do remember to share your Google Cloud Skills Boost public profile URL below so that we can track your progress in the program.<br>
+                    1. Log-in to <a href='https://www.cloudskillsboost.google/' target='blank'>https://www.cloudskillsboost.google/</a> if not already logged in <br>
+                    2. Once logged-in, then go to <a href='https://www.cloudskillsboost.google/profile/activity' target='blank'>https://www.cloudskillsboost.google/profile/activity</a><br>
+                    3. Now click on the blue button "Make profile public" besides your account picture and then "Make Profile Public" if there's a pop-up. (See screenshot below)<br>
+                    4. Give some time for the page to load. Once it loads, you will be on your profile page. Now just share the browser URL below. (That's your profile URL)<br>
+                    TROUBLESHOOT<br>
+                    1. If in step 3, you did not see the button to make your profile public, then:<br>
+                    2. Go to <a href='https://cloudskillsboost.google/catalog_lab/1281' target='blank'>https://cloudskillsboost.google/catalog_lab/1281</a><br>
+                    3. Start the "A Tour of Google Cloud Hands-on Labs" lab. (Spend at least 5 minutes)<br>
+                    Once done,  come back to <a href='https://www.cloudskillsboost.google/profile/activity' target='blank'>https://www.cloudskillsboost.google/profile/activity</a> and the button will be enabled now.<br>
+                    4. Check this video for your reference: <a href='https://youtu.be/kpmYU_6xgak' target='blank'>https://youtu.be/kpmYU_6xgak</a>
+                </p>
+            </fieldset>
+
+            {{ form.url.label_tag }} {{ form.url }}
+
+            <p id='url_error'></p>
+        </div>
+        
+
+        {{ form.developer_url.label_tag }} {{ form.developer_url }}
+        <p id="developer_url_error" style="display:none;"></p>
+        {{ form.internet.label_tag }} {{ form.internet }}
+        {{ form.consent.label_tag }} {{ form.consent }}
+    </fieldset>
+    
+    <p id='email_error'></p>
+
+    <p id="error-message" style="display: none; color: red;"></p>
+
+    {% if form.errors %}
+        <div style='color:red'>
+            <strong>Please fix the following errors:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    <li><strong>{{ field|title }}:</strong> {{ errors|striptags }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <button type="submit">REGISTER</button>
+
+</form>
+
+{% if messages %}
+  <script>
+    {% for message in messages %}
+      alert("{{ message|escapejs }}");
+    {% endfor %}
+  </script>
+{% endif %}
+
+
+{% endblock %}

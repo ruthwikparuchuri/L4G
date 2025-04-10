@@ -1,0 +1,391 @@
+
+{% extends "base.html" %}
+
+{% block title %}Learner Registration{% endblock %}
+{% load static %}
+
+{% block content %}
+
+<script>
+    $(document).ready(function () {
+        let collegeField = $('#id_student_college'); // College dropdown
+        let newCollegeField = $('#new_college'); // New college input field
+        let errorElement = $('#college_error'); // Error message container
+
+        // Function to check if the selected college exists
+        function checkCollegeExists(college, callback) {
+            var errorElement = $("#college_error");  // Ensure correct selector
+        
+            if (!college) {
+                errorElement.text("College name is required.").css("color", "red").show();
+                return callback(false);
+            }
+        
+            $.ajax({
+                url: "{% url 'registration:validate_college' %}",
+                data: { term: college },
+                success: function (response) {
+                    console.log("Response from server:", response); // Debugging output
+        
+                    if (response.exists === true) {  // Ensure `response.exists` is strictly checked
+                        errorElement.text("").hide();  // Clear error and hide
+                        callback(true);
+                    } else {
+                        errorElement.text("Invalid College name. Please select a valid college.")
+                            .css("color", "red").show();
+                        callback(false);
+                    }
+                },
+                error: function () {
+                    console.log("Error occurred while validating college");
+                    errorElement.text("Error validating College. Please try again.")
+                        .css("color", "red").show();
+                    callback(false);
+                }
+            });
+        }
+        
+        
+
+        // Handle college selection
+        collegeField.on("change", function () {
+            let selectedCollege = $(this).val().trim().toLowerCase();
+
+            if (selectedCollege === "other") {
+                newCollegeField.show().attr("required", true);
+                errorElement.text("").hide(); // Hide error when "Other" is selected
+            } else {
+                newCollegeField.hide().removeAttr("required");
+                checkCollegeExists(selectedCollege, function () {});
+            }
+        });
+
+        // College Autocomplete
+        collegeField.on('input', function () {
+            const query = $(this).val();
+            if (query.length > 1) {
+                $.ajax({
+                    url: "{% url 'registration:autocomplete_college' %}",
+                    data: { term: query },
+                    success: function (data) {
+                        let options = "";
+                        data.forEach(function (item) {
+                            options += `<option value="${item}">${item}</option>`;
+                        });
+                        let datalist = $('#colleges_list');
+                        if (datalist.length === 0) {
+                            datalist = $('<datalist id="colleges_list"></datalist>').insertAfter(collegeField);
+                        }
+                        datalist.html(options);
+                        collegeField.attr('list', 'colleges_list');
+                    },
+                    error: function () {
+                        console.error("Error fetching autocomplete data.");
+                    }
+                });
+            }
+        });
+
+        // Roll Number Validation
+        $('#id_rollno').on('blur', function () {
+            let rollno = $(this).val();
+            if (rollno) {
+                $.ajax({
+                    url: "{% url 'registration:validate_rollno' %}",
+                    data: { rollno: rollno },
+                    success: function (data) {
+                        let rollno_error = $("#rollno_error");
+                        if (data.is_taken) {
+                            rollno_error.text("This Rollno already exists. Please use a different Rollno.").css("color", "red").show();
+                        } else {
+                            rollno_error.text("").hide();
+                        }
+                    }
+                });
+            }
+        });
+
+        // Email Validation
+        $('#id_email').on('blur', function () {
+            let email = $(this).val();
+            if (email) {
+                $.ajax({
+                    url: "{% url 'registration:validate_email' %}",
+                    data: { email: email },
+                    success: function (data) {
+                        let email_error = $("#email_error");
+                        if (data.is_taken) {
+                            email_error.text("This Email already exists. Please use a different Email.").css("color", "red").show();
+                        } else if (!data.is_valid) {
+                            email_error.text("Invalid Email. Please enter a valid Email.").css("color", "red").show();
+                        } else {
+                            email_error.text("").hide();
+                        }
+                    }
+                });
+            }
+        });
+
+        // URL Validation
+        $('#id_url').on('blur', function () {
+            let url = $(this).val();
+            if (url) {
+                $.ajax({
+                    url: "{% url 'registration:validate_url' %}",
+                    data: { url: url },
+                    success: function (data) {
+                        let url_error = $("#url_error");
+                        if (data.is_taken) {
+                            url_error.text("This URL already exists. Please use a different URL.").css("color", "red").show();
+                        } else if (!data.is_valid) {
+                            url_error.text("Invalid Google Skills boost URL. Please enter a valid URL.").css("color", "red").show();
+                        } else {
+                            url_error.text("").hide();
+                        }
+                    }
+                });
+            }
+        });
+
+        // Form Submission Validation
+        document.getElementById("registration-form").addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent default form submission
+        
+            const form = this;
+            const college = document.getElementById("id_student_college").value;
+            const rollno = document.getElementById("id_rollno").value;
+            const email = document.getElementById("id_email").value;
+            const url = document.getElementById("id_url").value;
+            const errorElement = document.getElementById("error-message");
+            const name = document.getElementById("id_name").value;
+            const dob = document.getElementById("id_date_of_birth").value;
+            const phone = document.getElementById("id_phone").value;
+            const branch = document.getElementById("id_branch").value;
+            const yoj = document.getElementById("id_yoj").value;
+            const yog = document.getElementById("id_yog").value;
+            const feedback = document.getElementById("id_feedback").value;
+            let isValidCollege = true;
+            
+            // Validate mandatory fields
+            if (!college || !rollno || !email || !url || !name || !dob || !phone || !branch || !yoj || !yog || !feedback) {
+                errorElement.innerText = "Please fill in all mandatory fields.";
+                errorElement.style.display = "block";
+                return;
+            }
+        
+            // Validate college
+            let selectedCollege = $('#id_student_college').val().trim().toLowerCase();
+            let newCollege = $('#new_college').val().trim();
+        
+            if (selectedCollege === "other" && !newCollege) {
+                $('#college_error').text("Please enter your college name.").css("color", "red").show();
+                return;
+            } else {
+                $('#college_error').text("").hide();
+            }
+        
+            if (selectedCollege !== "other") {
+                $.ajax({
+                    url: "{% url 'registration:validate_college' %}",
+                    data: { term: selectedCollege },
+                    async: false,
+                    success: function (response) {
+                        if (!response.exists) {
+                            $('#college_error').text("Invalid College name. Please select a valid college.").css("color", "red").show();
+                            isValidCollege = false;
+                        } else {
+                            $('#college_error').text("").hide();
+                        }
+                    },
+                    error: function () {
+                        $('#college_error').text("Error validating College. Please try again.").css("color", "red").show();
+                        isValidCollege = false;
+                    }
+                });
+            }
+        
+            if (!isValidCollege) return;
+        
+            // Validate email
+            let isValidEmail = false;
+            $.ajax({
+                url: "{% url 'registration:validate_email' %}",
+                data: { email: email },
+                async: false,
+                success: function (response) {
+                    const email_error = document.getElementById("email_error");
+                    if (response.is_taken) {
+                        email_error.innerText = "This Email already exists. Please use a different Email.";
+                        email_error.style.display = "block";
+                        email_error.style.color = "red";
+                        isValidEmail = false;
+                    } else if (!response.is_valid) {
+                        email_error.innerText = "Invalid Email. Please enter a valid Email.";
+                        email_error.style.display = "block";
+                        email_error.style.color = "red";
+                        isValidEmail = false;
+                    } else {
+                        email_error.innerText = "";
+                        email_error.style.display = 'none';
+                        isValidEmail = true;
+                    }
+                },
+                error: function () {
+                    document.getElementById("email_error").innerText = "Error validating email. Please try again.";
+                    document.getElementById("email_error").style.display = "block";
+                }
+            });
+        
+            if (!isValidEmail) return;
+        
+            // Validate URL
+            let isValidURL = false;
+            $.ajax({
+                url: "{% url 'registration:validate_url' %}",
+                data: { url: url },
+                async: false,
+                success: function (response) {
+                    const url_error = document.getElementById("url_error");
+                    if (response.is_taken) {
+                        url_error.innerText = "This URL already exists. Please use a different URL.";
+                        url_error.style.display = "block";
+                        url_error.style.color = "red";
+                        isValidURL = false;
+                    } else if (!response.is_valid) {
+                        url_error.innerText = "Invalid Google Skills boost URL. Please enter a valid URL.";
+                        url_error.style.display = "block";
+                        url_error.style.color = "red";
+                        isValidURL = false;
+                    } else {
+                        url_error.innerText = "";
+                        url_error.style.display = 'none';
+                        isValidURL = true;
+                    }
+                },
+                error: function () {
+                    document.getElementById("url_error").innerText = "Error validating URL. Please try again.";
+                    document.getElementById("url_error").style.display = "block";
+                }
+            });
+        
+            if (!isValidURL) return;
+        
+            // If all validations pass, submit the form
+            form.submit();
+        });
+        
+    });
+</script>
+
+  
+
+   <form method="post" id='registration-form' novalidate>
+       {% csrf_token %}
+      
+   <h1>L4G Google Cloud - Gen AI 2025</h1>
+   <h1>Registration Form</h1>
+          
+       Dear Learner, <br>Your participation adds value to this program, and by enrolling, you commit to participating in and completing the 40+ hours of course content within the specified timeline. <br>Courses to be completed: <br>
+
+
+   <a href='https://www.cloudskillsboost.google/paths/118' target='blank'> Introduction to Generative AI</a><br>
+
+
+   <a href='https://www.cloudskillsboost.google/paths/236' target='blank'> Gemini for Google Cloud</a><br>
+   <a href='https://www.cloudskillsboost.google/paths/183' target='blank'> Generative AI for Developers</a> <br>
+
+
+   For any queries or support, Please reach out to us at <b>trainings@l4g.in</b><br>
+  
+       <div class='form-row'>
+           <fieldset>
+               <legend><h3>Basic Information</h3></legend>
+               {{ form.name.label_tag }} {{ form.name }}
+               {{ form.gender.label_tag }} {{ form.gender }}
+               {{ form.type.label_tag }} {{ form.type }}
+               {{ form.date_of_birth.label_tag }} {{ form.date_of_birth }}
+               {{ form.phone.label_tag }} {{ form.phone }}
+           </fieldset>
+       </div>
+
+
+       <div>
+        <fieldset>
+            <legend><h3>Academic Information</h3></legend>
+            {{ form.rollno.label_tag }} {{ form.rollno }}
+            {{ form.college.label_tag }} {{ form.college }}
+            <span>Select / Type 'Other' if your college is not listed</span>
+            <input type="text" id="new_college" name="new_college" placeholder="Enter your college name" style="display:none;">
+            {{ form.branch.label_tag }} {{ form.branch }}
+            {{ form.yoj.label_tag }} {{ form.yoj }}
+            {{ form.yog.label_tag }} {{ form.yog }}
+        </fieldset>
+        <p id='rollno_error'></p>
+        <p id="college_error" style="display: none; color: red;"></p>
+    </div>
+    
+    
+
+
+       <div>
+           <fieldset>
+               <legend><h3>Mandatory Program Requirements</h3></legend>
+               <p>
+                   In order to take part in the program, you would need a Google Cloud Skills Boost account. Please use the instructions below to create an account and share your profile so that we can track your progress in the program.<br>
+                   Navigate to <a href='https://www.cloudskillsboost.google/' target='blank'>https://www.cloudskillsboost.google/</a><br>
+                   Click on "Join" & create an account using the email address you mentioned in this form.
+                   (Creating an account is always free!)
+               </p>
+
+
+               <p>
+                   Great! You have a Google Cloud Skills Boost account. Please do remember to share your Google Cloud Skills Boost public profile URL below so that we can track your progress in the program.<br>
+                   1. Log-in to <a href='https://www.cloudskillsboost.google/' target='blank'>https://www.cloudskillsboost.google/</a> if not already logged in <br>
+                   2. Once logged-in, then go to <a href='https://www.cloudskillsboost.google/profile/activity' target='blank'>https://www.cloudskillsboost.google/profile/activity</a><br>
+                   3. Now click on the blue button "Make profile public" besides your account picture and then "Make Profile Public" if there's a pop-up. (See screenshot below)<br>
+                   4. Give some time for the page to load. Once it loads, you will be on your profile page. Now just share the browser URL below. (That's your profile URL)<br>
+                   TROUBLESHOOT<br>
+                   1. If in step 3, you did not see the button to make your profile public, then:<br>
+                   2. Go to <a href='https://cloudskillsboost.google/catalog_lab/1281' target='blank'>https://cloudskillsboost.google/catalog_lab/1281</a><br>
+                   3. Start the "A Tour of Google Cloud Hands-on Labs" lab. (Spend at least 5 minutes)<br>
+                   Once done,  come back to <a href='https://www.cloudskillsboost.google/profile/activity' target='blank'>https://www.cloudskillsboost.google/profile/activity</a> and the button will be enabled now.<br>
+                   4. Check this video for your reference: <a href='https://youtu.be/kpmYU_6xgak' target='blank'>https://youtu.be/kpmYU_6xgak</a>
+               </p>
+           </fieldset>
+       </div>
+
+
+       <div>
+           <fieldset>
+               <legend><h3>Program Information</h3></legend>
+               {{ form.internet.label_tag }} {{ form.internet }}
+               {{ form.account_creation.label_tag }} {{ form.account_creation }}
+               {{ form.email.label_tag }} {{ form.email }}
+               {{ form.url.label_tag }} {{ form.url }}
+               {{ form.feedback.label_tag }} {{ form.feedback }}
+               {{ form.consent.label_tag }} {{ form.consent }}
+           </fieldset>
+           <p id='email_error'></p>
+           <p id='url_error'></p>
+       </div>
+       <!-- Error message container -->
+       <p id="error-message" style="display: none; color: red;"></p>
+       <p>{{form.errors}}</p>
+
+       {% if form.errors %}
+        <div style='color:red'>
+            <strong>Please fix the following errors:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    <li><strong>{{ field|title }}:</strong> {{ errors|striptags }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    
+       <button type="submit">REGISTER</button>
+   </form>
+
+   
+
+{% endblock %}

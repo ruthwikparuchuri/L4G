@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Add Institution{% endblock %}
+
+{% block content %}
+    
+<script>
+    
+    $(document).ready(function() {
+        // Load states based on selected country
+        $("#country-dropdown").change(function() {
+            var countryId = $(this).val();
+            $.ajax({
+                url: "{% url 'registration:load_states' %}",  
+                data: { country_id: countryId },
+                success: function(data) {
+                    $("#state-dropdown").empty().append('<option value="">Select State</option>');
+                    data.forEach(function(state) {
+                        $("#state-dropdown").append('<option value="'+ state.id +'">'+ state.name +'</option>');
+                    });
+                    $("#district-dropdown").empty().append('<option value="">Select District</option>');  
+                }
+            });
+        });
+
+        // Load districts based on selected state
+        $("#state-dropdown").change(function() {
+            var stateId = $(this).val();
+            $.ajax({
+                url: "{% url 'registration:load_districts' %}",
+                data: { state_id: stateId },
+                success: function(data) {
+                    $("#district-dropdown").empty().append('<option value="">Select District</option>');
+                    data.forEach(function(district) {
+                        $("#district-dropdown").append('<option value="'+ district.id +'">'+ district.name +'</option>');
+                    });
+                }
+            });
+        });
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        {% if success %}
+            alert("Institution added successfully!");
+            document.querySelector("form").reset();
+        {% endif %}
+    });
+</script>
+
+
+
+<form method="post" id='registration-form'>
+    {% csrf_token %}
+
+    <h2>Add New Institution</h2>
+
+    <div class='form-row'>
+
+        {% if form.errors %}
+        <div style="color: red; background: #ffe6e6; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            <strong>Error:</strong> Please check the details below.
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li><strong>{{ field|title }}</strong>: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Institution Name -->
+        <div class="form-group">
+            <label for="id_name">Institution Name</label>
+            {{ form.name }}
+        </div>
+
+        <!-- Short Name -->
+        <div class="form-group">
+            <label for="id_short_name">Short Name</label>
+            {{ form.short_name }}
+        </div>
+
+        <!-- AICTE Code -->
+        <div class="form-group">
+            <label for="id_aicte_code">AICTE Code</label>
+            {{ form.aicte_code }}
+        </div>
+
+        <!-- EAMCET Code -->
+        <div class="form-group">
+            <label for="id_eamcet_code">EAMCET Code</label>
+            {{ form.eamcet_code }}
+        </div>
+
+        <!-- L4G Code -->
+        <div class="form-group">
+            <label for="id_l4g_code">L4G Code</label>
+            {{ form.l4g_code }}
+        </div>
+
+        <!-- L4G Group Code -->
+        <div class="form-group">
+            <label for="id_l4g_group_code">L4G Group Code</label>
+            {{ form.l4g_group_code }}
+        </div>
+
+        <!-- Country Dropdown -->
+        <div class="form-group">
+            <label for="id_country_code">Country</label>
+            {{ form.country_code }}
+        </div>
+
+        <!-- State Dropdown (Initially empty) -->
+        <div class="form-group">
+            <label for="id_state_code">State</label>
+            {{ form.state_code }}
+        </div>
+
+        <!-- District Dropdown (Initially empty) -->
+        <div class="form-group">
+            <label for="id_district_code">District</label>
+            {{ form.district_code }}
+        </div>
+
+        <!-- Institution Type (Optional) -->
+        <div class="form-group">
+            <label for="id_type">Institution Type</label>
+            {{ form.type }}
+        </div>
+
+        
+        <!-- Address -->
+        <div class="form-group">
+            <label for="id_address">Address</label>
+            {{ form.address }}
+        </div>
+
+        <!-- Website -->
+        <div class="form-group">
+            <label for="id_website">Website</label>
+            {{ form.website }}
+        </div>
+
+        <!-- LatLong -->
+        <div class="form-group">
+            <label for="id_latlong">Latitude & Longitude</label>
+            {{ form.latlong }}
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit">Add Institution</button>
+    </div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    
+
+
+    
+
+    <!-- Email & Roll number form -->
+    <form method="get" class="mb-4">
+
+        <center> <h3 class="mb-4">Manage Events: Update Status & Upload Photo</h3> </center>
+
+        {% if messages %}
+            <div id="message-container">
+                {% for message in messages %}
+                    {% if message.tags == "error" %}
+                        <div style='color:red'>{{ message }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="row g-2">
+            <div class="col-md-5">
+                <input type="email" name="email" placeholder="Enter Trainer Email"
+                    value="{{ email }}" class="form-control" required>
+            </div>
+            <div class="col-md-5">
+                <input type="text" name="rollno" placeholder="Enter Roll Number"
+                    value="{{ rollno }}" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100">Validate</button>
+            </div>
+        </div>
+    </form>
+
+    <br/>
+
+    {% if trainer_found %}
+        <form method="get" class="mb-3">
+            <input type="hidden" name="email" value="{{ email }}">
+            <input type="hidden" name="rollno" value="{{ rollno }}">
+
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search by event name"
+                        value="{{ search }}">
+                </div>
+                <div class="col-md-4">
+                    <select name="status" class="form-control mb-2">
+                        <option value="">All Status</option>
+                        {% for code, label in status_choices %}
+                            <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-secondary w-100">Apply Filter</button>
+                </div>
+            </div>
+        </form>
+
+        <br/>
+
+        {% if events %}
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Event Name</th>
+                            <th>Date & Time</th>
+                            <th>Change Status</th>
+                            <th>Upload New</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <td>{{ event.event_name }}</td>
+                            <td>{{ event.datetime }}</td>
+                            <td>
+                                <select name="status_{{ event.id }}" class="form-control">
+                                    {% for code, label in status_choices %}
+                                        <option value="{{ code }}" {% if code == event.event_status %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                
+                            </td>
+                            <td>
+                                <input type="file" name="photo_{{ event.id }}" accept="image/*" class="form-control">
+                            </td>
+                            <td>
+                                <button type="submit" name="update_event_{{ event.id }}" class="btn btn-success btn-sm">Update</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        {% else %}
+            <div class="alert alert-warning">No events found for this trainer.</div>
+        {% endif %}
+    {% endif %}
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            <script>alert("{{ message|escapejs }}");</script>
+        
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+
+
+{% endblock %}

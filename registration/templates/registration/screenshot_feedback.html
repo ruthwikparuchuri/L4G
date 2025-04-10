@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Workshop Feedback{% endblock %}
+
+{% load static %}
+
+{% block content %}
+
+{% if messages %}
+    <script>
+        {% for message in messages %}
+            {% if message.tags == "success" %}
+                alert("{{ message }}");
+            {% endif %}
+        {% endfor %}
+    </script>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h2>Workshop Feedback</h2>
+    <strong><p>Please provide your feedback and upload Code lab Project on Google Console Screenshot as proof of completion.</p></strong>
+
+
+    {% if messages %}
+        <div id="message-container">
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                    <div style='color:red'>{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% if errors %}
+        <div style="color: red; margin-top: 20px;">
+            <ul>
+                {% for field, error_list in errors.items %}
+                    {% for error in error_list %}
+                        <li><strong>{{ field|title }}</strong>: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    
+    <div class="form-group">
+        <label for="id_rollno">Roll Number:</label>
+        <input type="text" id="id_rollno" name="rollno" class="form-control" placeholder="Enter Roll Number" required>
+    </div>
+
+    <div class="form-group">
+        <label for="id_email">Email:</label>
+        <input type="email" id="id_email" name="email" class="form-control" placeholder="Enter Email" required>
+    </div>
+
+    <div class="form-group">
+        <label for="id_screenshot" style="font-weight: bold;">Code lab Project on Google Console Screenshot :</label>
+        <div style="position: relative; display: flex; align-items: center; gap: 15px;">
+            <label for="id_screenshot" 
+                   style="background-color:#066371; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                Choose Image
+            </label>
+            <span id="screenshot-filename" style="font-style: italic; color: #555;">No file chosen</span>
+        </div>
+        <input type="file" id="id_screenshot" name="screenshot" accept="image/*" class="form-control" style="display: none;" required>
+        <div id="screenshot-preview" style="margin-top: 10px;"></div>
+    </div>
+
+        <div class="form-group" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+
+            
+            <label><strong>How would you rate the overall quality of the workshop?</strong></label>
+            <div style="display: flex; gap: 15px; margin-top: 5px;">
+                {% for i in "12345" %}
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="radio" name="overall_quality" value="{{ i }}" required> {{ i }}
+                    </label>
+                {% endfor %}
+            </div>
+
+            <!-- Rating Legend -->
+            <div style="margin-bottom: 15px; font-weight: bold;">
+                Rating Scale: 
+                <span style="margin-left: 10px;">1: Poor</span> | 
+                <span>2: Bad</span> | 
+                <span>3: Average</span> | 
+                <span>4: Good</span> | 
+                <span>5: Excellent</span>
+            </div>
+        </div>
+    
+    
+        <div class="form-group" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <label><strong>How relevant was the Gemini workshop content for you?</strong></label>
+            <select name="content_relevance" class="form-control" required>
+                <option value="">--Select--</option>
+                <option>Not Relevant</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>Very Relevant</option>
+            </select>
+        </div>
+    
+        <div class="form-group" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 10px;">
+                <strong>Which aspects of the workshop were most useful?</strong>
+            </label>
+            
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+                <label><input style="width:10%" type="checkbox" name="useful_aspects" value="Introduction to Gemini API"> Introduction to Gemini API</label>
+                <label><input style="width:10%" type="checkbox" name="useful_aspects" value="Hands-on coding exercises"> Hands-on coding exercises</label>
+                <label><input style="width:10%" type="checkbox" name="useful_aspects" value="Real-world application examples"> Real-world application examples</label>
+                <label><input style="width:10%" type="checkbox" name="useful_aspects" value="Q&A session with the trainer"> Q&A session with the trainer</label>
+                <label><input style="width:10%" type="checkbox" name="useful_aspects" value="Resource sharing"> Resource sharing</label>
+            </div>
+        </div>
+        
+    
+        <div class="form-group" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <label><strong>How satisfied were you with the trainer's delivery and explanation?</strong></label>
+            <select name="trainer_satisfaction" class="form-control" required>
+                <option value="">--Select--</option>
+                <option>Very Dissatisfied</option>
+                <option>Dissatisfied</option>
+                <option>Neutral</option>
+                <option>Satisfied</option>
+                <option>Very Satisfied</option>
+            </select>
+        </div>
+        
+        <div class="form-group" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <label for="future_interest" class="block font-medium mt-4">
+            How likely are you to participate in future workshops on similar topics? *
+        </label>
+        <select id="future_interest" name="future_interest" required class="mt-1 block w-full border border-gray-300 rounded px-3 py-2">
+            <option value="" disabled selected>Select your response</option>
+            <option value="Very Unlikely">Very Unlikely</option>
+            <option value="Unlikely">Unlikely</option>
+            <option value="Neutral">Neutral</option>
+            <option value="Likely">Likely</option>
+            <option value="Very Likely">Very Likely</option>
+        </select>
+    </div>
+        
+    
+        <div class="form-group" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <label><strong>Is there any specific topic related to Gemini you would like to see covered in future workshops?</strong></label>
+            <input type="text" name="future_topics" class="form-control">
+        </div>
+    
+        <div class="form-group" style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+            <label><strong>Please rate the following aspects of the workshop:</strong></label>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Poor</th>
+                        <th>Fair</th>
+                        <th>Good</th>
+                        <th>Excellent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aspect in aspects %}
+                    <tr>
+                        <td>{{ aspect }}</td>
+                        {% for level in levels %}
+                        <td><input type="radio" name="{{ aspect|slugify }}" value="{{ level }}" required></td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    
+    
+    <div class="form-group">
+        <label for="id_feedback" style="font-weight: bold;">Additional Feedback:</label>
+        <textarea id="id_feedback" name="feedback" rows="4" 
+                  style="width: 95%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; resize: vertical; font-size: 15px;" 
+                  placeholder="Enter your feedback about the workshop, trainer, or anything else..."></textarea>
+    </div>
+    
+
+    
+
+    <button type="submit" id="submit-btn">Submit Feedback</button>
+    <span id="submit-status" style="margin-left: 15px; color: green; font-weight: bold; display: none;">
+        Please wait, Submitting feedback...
+    </span>
+</form>
+
+
+<script>
+    const fileInput = document.getElementById('id_screenshot');
+    const fileNameSpan = document.getElementById('screenshot-filename');
+    const previewDiv = document.getElementById('screenshot-preview');
+
+    fileInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (file) {
+            fileNameSpan.textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                previewDiv.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview" style="max-width: 300px; max-height: 200px; border: 1px solid #ccc; padding: 5px; border-radius: 5px;">
+                `;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            fileNameSpan.textContent = 'No file chosen';
+            previewDiv.innerHTML = '';
+        }
+    });
+
+
+    const submitBtn = document.getElementById('submit-btn');
+    const statusSpan = document.getElementById('submit-status');
+
+    document.querySelector('form').addEventListener('submit', function () {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+        statusSpan.style.display = 'inline';
+    });
+</script>
+
+{% endblock %}

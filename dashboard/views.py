@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.db.models import Q
 from django.shortcuts import render
 from main.models import Learner_Program_Progress,Learner_Module_Progress,Learner_Course_Progress,Learner_Specialization_Progress
+from main.models import Learner_Employment
 
 
 
@@ -348,6 +349,40 @@ def get_filtered_institution_data(institution_name=None, onboarded_filter=None, 
         })
 
     return sorted(institution_data, key=lambda x: x['onboarded'], reverse=True)
+
+from django.shortcuts import render
+from main.models import Learner_Employment, Event, Learner_Program_Progress
+
+from django.db.models import Q
+
+def eventlist(request):
+    trainer_emps = Learner_Employment.objects.all()
+    events = []
+    selected_trainer_id = request.POST.get('trainer')
+
+    if selected_trainer_id:
+        selected_trainer = Learner_Employment.objects.get(id=selected_trainer_id)
+        events = Event.objects.filter(trainers=selected_trainer).prefetch_related('program_code')
+
+        for event in events:
+            program = event.program_code
+            if program:
+                # Get learners who are associated with requirements of this program
+                learners = l.objects.filter(
+                    learner_program_requirement__program_requirement_code__program_code=program
+                ).distinct()
+
+                event.learners = learners
+            else:
+                event.learners = []
+
+    return render(request, 'dashboard/events-list.html', {
+        'trainers': trainer_emps,
+        'events': events,
+        'selected_trainer_id': int(selected_trainer_id) if selected_trainer_id else None,
+    })
+
+
 
 
 

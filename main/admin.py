@@ -28,4 +28,6 @@ admin.site.register(Learner_Module_Progress)
 admin.site.register(Learner_Course_Progress)
 admin.site.register(Learner_Specialization_Progress)
 admin.site.register(Learner_Program_Progress)
+admin.site.register(Event)
+admin.site.register(CollegeVerificationRequest)
 

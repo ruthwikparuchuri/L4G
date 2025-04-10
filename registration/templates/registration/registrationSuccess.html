@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registration Success{% endblock %}
+{% block content %}
+
+    <div class="container">
+        <h1>Registration Status</h1>
+        
+        {% if status == "approved" %}
+            <p class="success">Your registration was successful!</p>
+            <p>Welcome! You can now access all features.</p>
+        {% elif status == "under_review" %}
+            <p class="pending">Your registration is under review.</p>
+            <p>We will notify you once your registration is approved.</p>
+        {% else %}
+            <p>Something went wrong. Please try again later.</p>
+        {% endif %}
+
+        <a href="/" class="btn">Go to Homepage</a>
+    </div>
+
+{% endblock %}

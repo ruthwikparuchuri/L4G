@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Include Select2 CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+
+<div>
+    <h2>Pending College Verification Requests</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Institution</th>
+                <th>Assign College</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in verification_requests|dictsortreversed:"id" %}
+            <tr>
+                <td>{{ request.data.name }}</td>
+                <td>{{ request.data.phone }}</td>
+                <td>{{ request.new_institution }}</td>
+                <td>
+                    <select class="assign-college" name="assigned_college" data-request-id="{{ request.id }}" style="width: 250px;">
+                        <option value="">Select a College</option>
+                        {% for college in colleges %}
+                            <option value="{{ college.name }}">{{ college.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="college-error" style="display: none; color: red;"></p>
+                </td>
+                <td>
+                    <button class="approve-btn" data-request-id="{{ request.id }}" disabled>Approve</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <!-- Button to Show Approved Students -->
+    <div class="approved-students-container">
+        <button id="toggle-approved-students" style="background-color:rgb(239, 151, 9)" >View Approved Students</button>
+    </div>
+
+    <!-- Approved Students Section (Initially Hidden) -->
+    <div id="approved-students-section" style="display: none;">
+        <h2>Approved Students</h2>
+        <table class="approved-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>College</th>
+                </tr>
+            </thead>
+            <tbody id="approved-students-list">
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Include jQuery & Select JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        const csrfToken = "{{ csrf_token }}";  // Fetch CSRF token from Django template
+
+        // Initialize Select for dropdown with search
+        $(".assign-college").select2({
+            placeholder: "Search for a college...",
+            allowClear: true,
+            minimumInputLength: 1,
+            ajax: {
+                url: "{% url 'registration:autocomplete_college' %}",
+                dataType: "json",
+                delay: 250,
+                data: function (params) {
+                    return { term: params.term };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.map(function (item) {
+                            return { id: item, text: item };
+                        })
+                    };
+                }
+            }
+        });
+
+        // Handle College Selection & Enable Button
+        $(document).on("change", ".assign-college", function () {
+            const requestId = $(this).data("request-id");
+            const approveBtn = $("button.approve-btn[data-request-id='" + requestId + "']");
+        
+            if ($(this).val()) {
+                approveBtn.prop("disabled", false).addClass("enabled");
+            } else {
+                approveBtn.prop("disabled", true).removeClass("enabled");
+            }
+        });
+
+        // Approve Learner with Confirmation Box for Duplicate Users
+        $(document).on("click", ".approve-btn", function () {
+            if ($(this).prop("disabled")) return;
+
+            const requestId = $(this).data("request-id");
+            const assignedCollege = $("select[data-request-id='" + requestId + "']").val();
+
+            $.ajax({
+                url: "{% url 'registration:approve_learner' %}",
+                type: "POST",
+                headers: { "X-CSRFToken": csrfToken },  
+                data: {
+                    verification_id: requestId,
+                    assigned_college: assignedCollege
+                },
+                success: function (response) {
+                    alert(response.success);
+                    location.reload();
+                },
+                error: function (xhr) {
+                    const errorMessage = xhr.responseJSON.error;
+
+                    if (errorMessage.includes("User already exists")) {
+                        if (confirm(errorMessage + "\n\nWould you like to set approval status to true?")) {
+                            updateApprovalStatus(requestId);
+                        }
+                    } else {
+                        alert(errorMessage);
+                    }
+                }
+            });
+        });
+
+        // Function to Update Approval Status for Existing Users
+        function updateApprovalStatus(requestId) {
+            $.ajax({
+                url: "/registration/update-approval/" + requestId + "/",
+                type: "POST",
+                headers: { "X-CSRFToken": csrfToken },  
+                data: {
+                    verification_id: requestId,
+                    approve: true
+                },
+                success: function (response) {
+                    alert(response.message);
+                    location.reload();
+                },
+                error: function () {
+                    alert("Failed to update approval status. Please try again.");
+                }
+            });
+        }
+    // Toggle Approved Students Section
+    $("#toggle-approved-students").click(function () {
+        const section = $("#approved-students-section");
+        if (section.is(":visible")) {
+            section.hide();
+            $(this).text("View Approved Students");
+        } else {
+            loadApprovedStudents();
+            section.show();
+            $(this).text("Hide Approved Students");
+        }
+    });
+
+    // Load Approved Students Dynamically
+    function loadApprovedStudents() {
+        $.ajax({
+            url: "{% url 'registration:get_approved_students' %}",
+            type: "GET",
+            success: function (response) {
+                const tableBody = $("#approved-students-list");
+                tableBody.empty();
+
+                response.students.forEach(student => {
+                    const row = `<tr>
+                        <td>${student.name}</td>
+                        <td>${student.phone}</td>
+                        <td>${student.college}</td>
+                    </tr>`;
+                    tableBody.append(row);
+                });
+            },
+            error: function () {
+                alert("Failed to load approved students.");
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}

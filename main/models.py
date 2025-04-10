@@ -273,3 +273,48 @@ class Learner_Program_Progress(models.Model):
 
     def __str__(self):
         return f'{self.id} - Learner: {self.learner_code.name}, Program: {self.program_code.name}'
+    
+class CollegeVerificationRequest(models.Model):
+    data = models.JSONField()  
+    new_institution = models.CharField(max_length=255, default='') 
+    mobile = models.CharField(max_length=15, default='') 
+    approved = models.BooleanField(default=False)  
+
+    def __str__(self):
+        return f"Verification Request ({'Approved' if self.approved else 'Pending'})"
+
+
+
+EVENT_STATUS_CHOICES = [
+    ('scheduled', 'Scheduled'),
+    ('ongoing', 'Ongoing'),
+    ('completed', 'Completed'),
+    ('cancelled', 'Cancelled'),
+]
+
+
+class Event(models.Model):
+    event_name = models.CharField(max_length=255,default='')
+    program_code = models.ForeignKey(Program, on_delete=models.CASCADE, null=True, blank=True)
+    datetime = models.DateTimeField()
+    event_url = models.URLField(unique=True)
+    institution = models.ForeignKey(Institution, on_delete=models.SET_NULL, null=True, blank=True)
+    venue = models.CharField(max_length=255, null=True, blank=True)
+    trainers = models.ManyToManyField('Learner_Employment', related_name='events') 
+    info = models.TextField(max_length=500, null=True, blank=True)
+    event_status = models.CharField(
+        max_length=10,  
+        choices=EVENT_STATUS_CHOICES,
+        default='scheduled',  
+    )
+    event_photo_url = models.URLField(null=True, blank=True)
+
+    
+    def save(self, *args, **kwargs):
+        if self.event_status:
+            self.event_status = self.event_status.lower()
+        super().save(*args, **kwargs)
+
+
+    def __str__(self):
+        return f"{self.event_name} - {self.datetime.strftime('%Y-%m-%d %H:%M')} - {self.event_url}"
