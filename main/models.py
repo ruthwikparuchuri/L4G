@@ -24,6 +24,15 @@ MODULE_TYPE = [
    ('P', 'practical'),
 ]
 
+UNIVERSITY_CHOICES = [
+    ('Public University', 'Public University'),
+    ('Private University-State', 'Private University-State'),
+    ('Private University-Deemed to be', 'Private University-Deemed to be'),
+    ('Autonomous College', 'Autonomous College'),
+    ('Affiliated College', 'Affiliated College'),
+    ('Unknown', 'Unknown'),
+]
+
 
 # Create your models here.
 
@@ -49,13 +58,7 @@ class District(models.Model):
    def __str__(self):
        return f'{self.id} - {self.name}'
    
-class InstitutionType(models.TextChoices):
-    PUBLIC_UNIVERSITY = 'Public University', 'Public University'
-    PRIVATE_UNIVERSITY_STATE = 'Private University-State', 'Private University-State'
-    PRIVATE_UNIVERSITY_DEEMED = 'Private University-Deemed to be', 'Private University-Deemed to be'
-    AUTONOMOUS_COLLEGE = 'Autonomous College', 'Autonomous College'
-    AFFILIATED_COLLEGE = 'Affiliated College', 'Affiliated College'
-    UNKNOWN = 'Unknown', 'Unknown'
+
 
 
 class Institution(models.Model):
@@ -64,12 +67,9 @@ class Institution(models.Model):
    aicte_code = models.CharField(max_length=15, unique=True, null=True, blank=True)
    eamcet_code = models.CharField(max_length=15, null=True, blank=True)
    l4g_code = models.CharField(max_length=9, default='', unique=True)
-   l4g_group_code = models.CharField(max_length=6,null=True, blank=True, unique=True)
-   type = models.CharField(
-        max_length=50,
-        choices=InstitutionType.choices,
-        default=InstitutionType.UNKNOWN
-    )  # Fixed the TextChoices issue
+   l4g_group_code = models.CharField(max_length=6,null=True, blank=True)
+   #type = models.TextChoices('Public University', 'Private University-State', 'Private University-Deemed to be','Autonomous College', 'Affiliated College', 'Unknown')
+   type = models.CharField(max_length=50, choices=UNIVERSITY_CHOICES, default='Unknown')
    address = models.CharField(max_length=255, null=True, blank=True)
    website = models.CharField(max_length=255, null=True, blank=True)
    latlong = models.CharField(max_length=60, null=True, blank=True)
@@ -225,7 +225,7 @@ class Learner_Program_Requirement(models.Model):
    value = models.CharField(max_length=255, null=True, blank=True)
 
 class Learner_Module_Progress(models.Model):
-    completed = models.BooleanField(default=False)
+    is_completed = models.BooleanField(default=False)
     duration = models.IntegerField(null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
     score = models.FloatField(null=True, blank=True)
@@ -237,7 +237,7 @@ class Learner_Module_Progress(models.Model):
 
 
 class Learner_Course_Progress(models.Model):
-    completed = models.BooleanField(default=False)
+    is_completed = models.BooleanField(default=False)
     duration = models.IntegerField(null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
     score = models.FloatField(null=True, blank=True)
@@ -249,7 +249,7 @@ class Learner_Course_Progress(models.Model):
 
 
 class Learner_Specialization_Progress(models.Model):
-    completed = models.BooleanField(default=False)
+    is_completed = models.BooleanField(default=False)
     duration = models.IntegerField(null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
     score = models.FloatField(null=True, blank=True)
@@ -265,7 +265,7 @@ class Learner_Program_Progress(models.Model):
     is_onboarded= models.BooleanField(default=False)
     is_active= models.BooleanField(default=False)
     url = models.URLField(null=True, blank=True)
-    completed = models.BooleanField(default=False)
+    is_completed = models.BooleanField(default=False)
     duration_hrs = models.IntegerField(null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
     learner_code = models.ForeignKey(Learner, on_delete=models.CASCADE)
@@ -273,6 +273,20 @@ class Learner_Program_Progress(models.Model):
 
     def __str__(self):
         return f'{self.id} - Learner: {self.learner_code.name}, Program: {self.program_code.name}'
+    
+class Institution_Program_Requirement_General(models.Model):
+   name = models.CharField(max_length=255, default='')
+   is_mandatory = models.BooleanField(default=False)
+   program_code =  models.ForeignKey(Program, on_delete=models.CASCADE)
+
+
+   def __str__(self):
+       return f'{self.id} - {self.name}'
+   
+class Institution_Program_Requirement_Specific(models.Model):
+   institution_code = models.ForeignKey(Institution, on_delete=models.CASCADE)
+   institution_program_requirement_general_code = models.ForeignKey(Institution_Program_Requirement_General, on_delete=models.CASCADE)
+   value = models.CharField(max_length=255, null=True, blank=True)
     
 class CollegeVerificationRequest(models.Model):
     data = models.JSONField()  
@@ -295,15 +309,16 @@ EVENT_STATUS_CHOICES = [
 
 class Event(models.Model):
     event_name = models.CharField(max_length=255,default='')
-    program_code = models.ForeignKey(Program, on_delete=models.CASCADE, null=True, blank=True)
+    program_code = models.ForeignKey(Program, on_delete=models.PROTECT, null=True, blank=True)
     datetime = models.DateTimeField()
-    event_url = models.URLField(unique=True)
-    institution = models.ForeignKey(Institution, on_delete=models.SET_NULL, null=True, blank=True)
+    duration_minutes = models.IntegerField(null=True, blank=True) 
+    event_url = models.URLField(null=True, blank=True)
+    institution = models.ForeignKey(Institution, on_delete=models.PROTECT)
     venue = models.CharField(max_length=255, null=True, blank=True)
     trainers = models.ManyToManyField('Learner_Employment', related_name='events') 
-    info = models.TextField(max_length=500, null=True, blank=True)
+    info = models.TextField(max_length=512, null=True, blank=True)
     event_status = models.CharField(
-        max_length=10,  
+        max_length=12,  
         choices=EVENT_STATUS_CHOICES,
         default='scheduled',  
     )
@@ -317,4 +332,4 @@ class Event(models.Model):
 
 
     def __str__(self):
-        return f"{self.event_name} - {self.datetime.strftime('%Y-%m-%d %H:%M')} - {self.event_url}"
+        return f"{self.event_name} - {self.datetime.strftime('%Y-%m-%d %H:%M')}"

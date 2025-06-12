@@ -253,11 +253,11 @@ def genai2025(request):
     # Overall counts
     onboarded_count = Learner_Program_Progress.objects.filter(program_code_id=2,is_onboarded=True).count()
     active_count = Learner_Program_Progress.objects.filter(program_code_id=2,is_active=True).count()
-    completions_count = Learner_Program_Progress.objects.filter(program_code_id=2, completed=True).count()
+    completions_count = Learner_Program_Progress.objects.filter(program_code_id=2, is_completed=True).count()
 
-    beginner = Learner_Course_Progress.objects.filter(course_code_id=1, completed=True).count()
-    intermediate = Learner_Course_Progress.objects.filter(course_code_id=2, completed=True).count()
-    advanced = Learner_Course_Progress.objects.filter(course_code_id=3, completed=True).count()
+    beginner = Learner_Course_Progress.objects.filter(course_code_id=1, is_completed=True).count()
+    intermediate = Learner_Course_Progress.objects.filter(course_code_id=2, is_completed=True).count()
+    advanced = Learner_Course_Progress.objects.filter(course_code_id=3, is_completed=True).count()
 
     learning_hours = (beginner * 8) + (intermediate * 15) + (advanced * 19)
 
@@ -319,14 +319,14 @@ def get_filtered_institution_data(institution_name=None, onboarded_filter=None, 
 
         onboarded = progress_qs.filter(is_onboarded=True).count()
         active = progress_qs.filter(is_active=True).count()
-        completions = progress_qs.filter(completed=True).count()
+        completions = progress_qs.filter(is_completed=True).count()
 
         beginner = Learner_Course_Progress.objects.filter(
-            learner_code__in=learner_ids, course_code_id=1, completed=True).count()
+            learner_code__in=learner_ids, course_code_id=1, is_completed=True).count()
         intermediate = Learner_Course_Progress.objects.filter(
-            learner_code__in=learner_ids, course_code_id=2, completed=True).count()
+            learner_code__in=learner_ids, course_code_id=2, is_completed=True).count()
         advanced = Learner_Course_Progress.objects.filter(
-            learner_code__in=learner_ids, course_code_id=3, completed=True).count()
+            learner_code__in=learner_ids, course_code_id=3, is_completed=True).count()
 
         # Apply filters
         if onboarded_filter and onboarded < onboarded_filter:
