@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Gen AI 2025 Registrations</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            margin: 0;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: #600000;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1 1 300px;
+            max-width: 300px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+        }
+
+        .card p {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .filters select, .filters input[type="date"] {
+            margin: 5px 10px;
+            padding: 6px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        .filters button {
+            margin: 5px;
+        }
+
+        .rounded-dark-button {
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 2px solid #333;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .rounded-dark-button:hover {
+            background-color: #600000;
+        }
+
+        .table-container {
+            width: 95%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        tr:hover {
+            background-color: #600000;
+        }
+
+        .college h2 {
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                flex: 1 1 100%;
+            }
+            .filters select, .filters input[type="date"] {
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="college">
+        <h2>{{ request.user.userprofile.college }} - GenAI 2025 Dashboard</h2>
+    </div>
+
+    <div class="cards-container">
+        <div class="card">
+            <h2>Total Registered Learners</h2>
+            <p>{{ registered_count }}</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="filters">
+        <select name="branch">
+            <option value="">All Branches</option>
+            {% for branch in branches %}
+                <option value="{{ branch }}" {% if selected_branch == branch %}selected{% endif %}>{{ branch }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="year_of_graduation">
+            <option value="">All YOG</option>
+            {% for year in years_of_graduation %}
+                <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="section">
+            <option value="">All Sections</option>
+            {% for sec in sections %}
+                <option value="{{ sec }}" {% if selected_section == sec %}selected{% endif %}>{{ sec }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="gender">
+            <option value="">All Genders</option>
+            {% for g in genders %}
+                <option value="{{ g }}" {% if selected_gender == g %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="date" name="start_date" value="{{ start_date }}">
+        <input type="date" name="end_date" value="{{ end_date }}">
+
+        <button type="submit" class="rounded-dark-button">Apply Filters</button>
+        <button type="submit" name="action" value="download" class="rounded-dark-button">Download CSV</button>
+    </form>
+
+    <!-- Learner Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Timestamp</th>
+                    <th>Roll Number</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Mobile</th>
+                    <th>Email</th>
+                    <th>Branch</th>
+                    <th>YOG</th>
+                    <th>Section</th>
+                    <th>College</th>
+                    <th>Skills Boost URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for learner in learners %}
+                    <tr>
+                        <td>{{ learner.sno }}</td>
+                        <td>{{ learner.registration_timestamp }}</td>
+                        <td>{{ learner.roll_number }}</td>
+                        <td>{{ learner.name }}</td>
+                        <td>{{ learner.gender }}</td>
+                        <td>{{ learner.mobile }}</td>
+                        <td>{{ learner.email }}</td>
+                        <td>{{ learner.branch }}</td>
+                        <td>{{ learner.year_of_graduation }}</td>
+                        <td>{{ learner.section }}</td>
+                        <td>{{ learner.college }}</td>
+                        <td><a href="{{ learner.skills_boost_url }}" target="_blank" style="color: #7ee8d3;">Link</a></td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="12" style="text-align: center;">No learners found for selected filters.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

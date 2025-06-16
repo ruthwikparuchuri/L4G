@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GenAI Summer Internship Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    /* Base Styles & Variables */
+    :root {
+      /* Theme Colors */
+      --primary: #066371; /* Teal shade */
+      --primary-dark: #04505c;
+      --primary-rgb: 6, 99, 113; /* RGB values for primary color */
+      --secondary: rgb(241, 160, 52); /* Orange */
+      --secondary-dark: rgb(224, 140, 30);
+      
+      /* Status Colors */
+      --success: #4ade80;
+      --danger: #f43f5e;
+      --danger-dark: #e11d48;
+      --warning: #fb923c;
+      --light: #f1f5f9;
+      --dark: #0f172a;
+      --gray-50: #f9fafb;
+      
+      /* Gray Scale */
+      --gray-100: #f8fafc;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      
+      /* Gradients */
+      --gradient-primary: linear-gradient(135deg, #066371, #04505c);
+      --gradient-secondary: linear-gradient(135deg, rgb(241, 160, 52), rgb(224, 140, 30));
+      --gradient-mix: linear-gradient(135deg, #066371, rgb(241, 160, 52));
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      
+      /* Border Radius */
+      --radius-sm: 0.25rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      
+      /* Layout */
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--gray-700);
+      background-color: var(--gray-100);
+      min-height: 100vh;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    body.loaded {
+      opacity: 1;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--gray-800);
+      margin-bottom: 0.5rem;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    a:hover {
+      color: var(--primary-dark);
+    }
+
+    button {
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    /* Dashboard Content */
+    .dashboard {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 1rem;
+      max-width: 100%;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .dashboard-header {
+      text-align: center;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+
+    .dashboard-header h1 {
+      color: var(--primary);
+      font-size: 2.20rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* Stats Section */
+    .stats-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      background-color: white;
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.5rem;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      opacity: 0; 
+      transform: translateY(20px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      border-top: 3px solid transparent;
+      animation: fadeInUp 0.5s forwards;
+      animation-delay: calc(var(--animation-order, 0) * 0.1s);
+      height: 140px;
+    }
+
+    .stat-card:hover {
+      border-top-color: var(--secondary);
+      transform: translateY(-5px);
+    }
+
+    .stat-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      color: white;
+    }
+    .college-icon {
+      background: var(--gradient-primary);
+    }
+
+    .students-icon {
+      background: var(--gradient-secondary);
+    }
+
+    .completed-icon {
+      background: linear-gradient(135deg, #4ade80, #059669);
+    }
+
+    .beginner-card .stat-icon {
+      background: var(--gradient-secondary);
+    }
+
+    .intermediate-card .stat-icon {
+      background: var(--gradient-primary);
+    }
+
+    .advanced-card .stat-icon {
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    }
+
+    .genai-card .stat-icon {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .stat-info {
+      flex: 1; 
+    }
+
+    .stat-info h3 {
+      font-size: 1rem;
+      color: var(--gray-500);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--gray-800);
+    }
+
+    /* Filter & Table Sections */
+    .filter-section, .table-section {
+      background-color: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      margin-bottom: 1.5rem;    
+      overflow: hidden;
+      border-left: 4px solid var(--primary);
+      width: 100%;
+    }
+    .filter-section{
+      margin-top: 1rem;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--gray-200);
+      background-color: rgba(6, 99, 113, 0.05);
+      margin-bottom: 0; /* Ensure no extra margin is affecting layout */
+    }
+
+    .section-header h2 {
+      font-size: 1.125rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+    }
+
+    .btn-collapse {
+      background: transparent;
+      border: none;
+      color: var(--gray-500);
+      font-size: 1rem;
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+    }
+
+    .btn-collapse:hover {
+      background-color: var(--gray-100);
+      color: var(--primary);
+    }
+
+    /* Filter Content */
+    .filter-content {
+      padding: 1rem;
+      border-bottom: 1px solid var(--gray-200);
+      transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+      max-height: 500px;
+      opacity: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .filter-content.collapsed {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      width: 100%;
+      justify-content: center;
+      max-width: 900px; /* Control maximum width */
+      margin: 0 ; 
+    }
+
+    .filter-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    /* Form inputs */
+    input, select {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      color: var(--gray-700);
+      background-color: white;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(6, 99, 113, 0.1);
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.5rem;
+      padding-right: 2.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      width: 100%;
+    }
+
+    label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--gray-600);
+      text-align: left;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 2rem;
+      background: var(--gradient-primary);
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      min-width: 150px;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 2rem;
+      background: var(--gray-200);
+      color: var(--gray-700);
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+      min-width: 150px;
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-300);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Table styles */
+    .table-responsive {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 20px;
+      width: 100%;
+      overflow-x: auto;
+      max-width: 100vw;
+      padding: 0 10px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      background-color: white;
+      font-size: 14px;
+      color: var(--gray-700);
+    }
+
+    th, td {
+      border: 1px solid var(--gray-200);
+      padding: 12px 10px;
+      text-align: left;
+      word-break: break-word;
+      min-height: 50px;
+      vertical-align: middle;
+    }
+
+    th {
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    tr:nth-child(even) {
+      background-color: #e8e4e4;
+    }
+
+    tr:hover {
+      background-color: rgba(6, 99, 113, 0.05);
+    }
+
+    th[onclick]:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .sort-icon {
+      margin-left: 0.25rem;
+      font-size: 0.75rem;
+      opacity: 0.7;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .table-link {
+      color: var(--primary);
+      text-decoration: none;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    .table-link:hover {
+      color: var(--secondary);
+    }
+
+    .na-text {
+      color: var(--gray-400);
+      font-style: italic;
+    }
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border: 1px solid var(--gray-300); /* Thicker border with primary color */
+    border-radius: var(--radius-md); /* Larger border radius */
+    padding: 0.75rem 1.25rem; 
+    width: 250px; /* Wider search bar */
+    height: 50px; /* Slightly taller */
+    transition: var(--transition);
+    margin-left: auto;
+      position: absolute;
+  right: 1.5rem;
+  top: 35%;
+  transform: translateY(-50%);
+}
+
+
+.search-box i {
+    color: var(--primary); /* Primary color for icon */
+    font-size: 1.1rem; /* Slightly larger icon */
+    margin-right: 0.60rem; /* More spacing after icon */
+    margin-left: 0;
+}
+
+.search-box input {
+    font-size: 0.95rem; /* Slightly larger font */
+    color: var(--gray-800); /* Darker text color */
+}
+
+
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      text-align: center;
+      color: var(--gray-500);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      color: var(--gray-300);
+      margin-bottom: 1rem;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes highlight {
+      0% {
+        background-color: rgba(74, 222, 128, 0.2);
+      }
+      100% {
+        background-color: transparent;
+      }
+    }
+    
+    /* Custom Controls Styling - FIXED VERSION */
+    .controls-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin: 1.5rem 0;
+      gap: 1.5rem;
+    }
+    
+    .table-controls {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0 1.5rem 1.5rem;
+      padding-right: 260px;
+      position: relative;
+    }
+    
+    .column-controls {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      justify-content: center; 
+      margin: 0 auto;
+    }
+
+    .column-select-container {
+      position: relative;
+      width: 200px;
+    }
+
+    .column-select-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .column-select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background-color: white;
+      font-size: 0.875rem;
+      color: var(--gray-700);
+      appearance: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 1rem;
+      cursor: pointer;
+    }
+    
+    .column-select:hover {
+      border-color: var(--gray-400);
+    }
+
+    .column-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(6, 99, 113, 0.15);
+    }
+
+    .column-select option {
+      padding: 0.5rem;
+    }
+
+    .remove-column {
+      background: none;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      margin-left: 0.5rem;
+      padding: 0 0.25rem;
+      font-size: 1.25rem;
+      line-height: 1;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    .remove-column:hover {
+      opacity: 1;
+      color: var(--danger-dark);
+    }
+
+    /* Multiselect dropdown - FIXED VERSION */
+    .multiselect-dropdown {
+      position: relative;
+      width: 200px;
+      margin-right: 1rem;
+    }
+
+    .dropdown-header {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background: white;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+    
+    .dropdown-header:hover {
+      border-color: var(--gray-400);
+    }
+
+    .dropdown-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      margin-top: 0.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+    }
+
+    .dropdown-list.show {
+      display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .dropdown-item {
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .dropdown-item:hover {
+      background: var(--gray-50);
+    }
+
+    .dropdown-item input[type="checkbox"] {
+      width: 1.1em;
+      height: 1.1em;
+      border: 2px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      appearance: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .dropdown-item input[type="checkbox"]:checked {
+      background: var(--primary);
+      border-color: var(--primary);
+      position: relative;
+    }
+
+    .dropdown-item input[type="checkbox"]:checked::after {
+      content: "✓";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 0.9em;
+    }
+
+    .dropdown-item label {
+      font-size: 0.9rem;
+      color: var(--gray-700);
+      cursor: pointer;
+      user-select: none;
+      line-height: 1.4;
+    }
+
+    .selected-count {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* Status badge styles */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .status-badge.completed {
+      background-color: rgba(74, 222, 128, 0.15);
+      color: #059669;
+    }
+
+    /* Responsive media queries */
+    @media (max-width: 768px) {
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .dashboard {
+        padding: 1rem;
+      }
+      
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 12px 8px;
+        font-size: 12px;
+      }
+      
+      .table-controls {
+        flex-direction: column;
+        justify-content: center;
+        gap: 1rem;
+        position: relative; 
+      }
+      
+      .column-controls {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        gap: 1.5rem;
+        display:flex;
+      }
+      
+      .column-select-container {
+        width: 100%;
+        max-width: 400px;
+      }
+      
+      .multiselect-dropdown {
+        width: 100%;
+        margin-right: 0;
+      }
+      
+  .search-box {
+    order: initial;
+    width: 100%;
+    margin-top: 1rem;
+  }
+    }
+
+    @media (max-width: 480px) {
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+      
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 12px 6px;
+        font-size: 11px;
+        display: block;
+        text-align: left;
+      }
+
+      tr {
+        display: block;
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--gray-300); 
+      }
+
+      thead {
+        display: none;
+      }
+
+      td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 6px;
+        color: var(--primary);
+      }
+    }
+    /* Add to your existing th styles */
+th {
+  position: relative;
+  padding-right: 2.5rem !important; /* Make space for the remove button */
+}
+
+th .remove-column {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  margin: 0;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  background: none;
+  border: none;
+}
+
+th .remove-column:hover {
+  opacity: 1;
+  transform: scale(1.1);
+  color: var(--danger-dark);
+}
+  </style>
+</head>
+<body class="loaded">
+  <div class="dashboard">
+    <div class="dashboard-header">
+      <h1>GenAI Summer Internship 2025 Dashboard</h1>  
+    </div>
+
+    <form method="get" class="intern-form">
+      <!-- Stats cards -->
+      <div class="stats-section">
+        <div class="stats-row">
+          <div class="stat-card" style="--animation-order: 1">
+            <div class="stat-icon college-icon">
+              <i class="fas fa-university"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Total Colleges</h3>
+              <div class="stat-value">{{ total_colleges }}</div>
+            </div>
+          </div>
+          
+          <div class="stat-card" style="--animation-order: 2">
+            <div class="stat-icon students-icon">
+              <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Total Registered Students</h3>
+              <div class="stat-value">{{ registered_count }}</div>
+            </div>
+          </div>
+          
+          <div class="stat-card" style="--animation-order: 3">
+            <div class="stat-icon completed-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3>Total GenAI Completed</h3>
+              <div class="stat-value">{{ trainer_approved_count }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Section -->
+      <div class="filter-section">
+        <div class="section-header">
+          <h2>
+            <i class="fas fa-filter"></i>
+            Filters
+          </h2>
+          <button type="button" class="btn-collapse" id="collapseFilters">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        
+        <div class="filter-content">
+          <div class="filter-grid">
+            <div class="form-group">
+              <label for="college">
+                <i class="fas fa-university"></i> College
+              </label>
+              <select name="college" id="college">
+                <option value="">Select College</option>
+                {% for college in colleges %}
+                  <option value="{{ college }}" {% if college == selected_college %}selected{% endif %}>{{ college }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="branch">
+                <i class="fas fa-code-branch"></i> Branch
+              </label>
+              <select name="branch" id="branch">
+                <option value="">Select Branch</option>
+                {% for branch in branches %}
+                  <option value="{{ branch }}" {% if branch == selected_branch %}selected{% endif %}>{{ branch }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="year">
+                <i class="fas fa-calendar-alt"></i> Year of Graduation
+              </label>
+              <select name="year_of_graduation" id="year">
+                <option value="">Select Year</option>
+                {% for year in years_of_graduation %}
+                  <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="section">
+                <i class="fas fa-layer-group"></i> Section
+              </label>
+              <select name="section" id="section">
+                <option value="">Select Section</option>
+                {% for section in sections %}
+                  <option value="{{ section }}" {% if section == selected_section %}selected{% endif %}>{{ section }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          
+          <div class="filter-actions">
+            <button type="submit" name="action" value="search" class="btn-primary">
+              <i class="fas fa-search"></i> Search
+            </button>
+            {% if learners %}
+              <button type="submit" name="action" value="download" class="btn-secondary">
+                <i class="fas fa-download"></i> Download CSV
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Learners Table Section -->
+      <div class="table-section">
+        <div class="section-header">
+          <h2><i class="fas fa-users"></i> Learners</h2>
+          
+          <!-- Table Controls moved into section header -->
+          <div class="table-controls">
+            <!-- Groups Dropdown -->
+            <div class="multiselect-dropdown">
+              <div class="dropdown-header" onclick="toggleDropdown('group')">
+                <span>
+                      <i class="fas fa-layer-group"></i>
+                      Groups (<span class="selected-count" id="groupCount">0</span>)
+                </span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              <div class="dropdown-list" id="groupDropdown">
+                <div class="dropdown-item">
+                  <input type="checkbox" id="groupPersonal" value="personal">
+                  <label for="groupPersonal">Personal</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="groupEducational" value="educational">
+                  <label for="groupEducational">Educational</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="groupProgram" value="program">
+                  <label for="groupProgram">Program Requirements</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="groupstatus" value="status">
+                  <label for="groupstatus">Status</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Columns Dropdown -->
+            <div class="multiselect-dropdown">
+              <div class="dropdown-header" onclick="toggleDropdown('column')">
+                <span>
+                    <i class="fas fa-columns"></i>
+                    Columns (<span class="selected-count" id="columnCount">0</span>)</span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              <div class="dropdown-list" id="columnDropdown">
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colAll" value="all">
+                  <label for="colAll">All Columns</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colRegistrationDate" value="RegistrationDate">
+                  <label for="colRegistrationDate">Timestamp</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colCollege" value="College">
+                  <label for="colCollege">College</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colBranch" value="branch">
+                  <label for="colBranch">Branch</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colGraduation" value="year_of_graduation">
+                  <label for="colGraduation">Year of Graduation</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colSection" value="section">
+                  <label for="colSection">Section</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colroll_number" value="roll_number">
+                  <label for="colroll_number">Roll Number</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colstudent_name" value="student_name">
+                  <label for="colstudent_name">Student Name</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colemail" value="email">
+                  <label for="colemail">Email</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colMobile" value="mobile">
+                  <label for="colMobile">Mobile</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colSkills" value="skills_boost_url">
+                  <label for="colSkills">Skills Boost URL</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colProfile" value="developer_profile">
+                  <label for="colProfile">Developer URL</label>
+                </div>
+                <div class="dropdown-item">
+                  <input type="checkbox" id="colApproval" value="approval_status">
+                  <label for="colApproval">GenAI Completed</label>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Search Box moved to be part of controls in header -->
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="tableSearch" placeholder="Search learners...">
+            </div>
+          </div>
+        </div>
+        
+        {% if learners %} 
+        <!-- Table Container -->
+        <div class="table-responsive">
+            <table id="learnersTable">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th onclick="sortTable(1, this)">Timestamp <span class="sort-icon">↕</span></th>
+                  <th onclick="sortTable(2, this)">College <span class="sort-icon">↕</span></th>
+                  <th onclick="sortTable(3, this)">Branch <span class="sort-icon">↕</span></th>
+                  <th onclick="sortTable(4, this)">Year of Graduation <span class="sort-icon">↕</span></th>
+                  <th onclick="sortTable(5, this)">Section <span class="sort-icon">↕</span></th>
+                  <th onclick="sortTable(6, this)">Roll Number <span class="sort-icon">↕</span></th>
+                  <th onclick="sortTable(7, this)">Student Name <span class="sort-icon">↕</span></th>
+                  <th>Email</th>
+                  <th>Mobile Number</th>
+                  <th>Skills Boost URL</th>
+                  <th>Developer URL</th>
+                  <th onclick="sortTable(12, this)">GenAI Completed <span class="sort-icon">↕</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for l in learners %}
+                <tr class="learner-row" data-rollno="{{ l.roll_number }}" data-email="{{ l.email }}">
+                  <td data-label="S.No">{{ forloop.counter }}</td>
+                  <td data-label="Timestamp">{{ l.registration_timestamp }}</td>
+                  <td data-label="College">{{ l.college }}</td>
+                  <td data-label="Branch">{{ l.branch }}</td>
+                  <td data-label="Year of Graduation">{{ l.year_of_graduation }}</td>
+                  <td data-label="Section">{{ l.section }}</td>
+                  <td data-label="Roll Number">{{ l.roll_number }}</td>
+                  <td data-label="Student Name">{{ l.name }}</td>
+                  <td data-label="Email">{{ l.email }}</td>
+                  <td data-label="Mobile">{{ l.mobile }}</td>
+                  <td data-label="Skills Boost URL">
+                    {% if l.skills_boost_url != '-' %}
+                      <a href="{{ l.skills_boost_url }}" target="_blank" class="table-link">Open</a>
+                    {% else %}
+                      <span class="na-text">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td data-label="Developer URL">
+                    {% if l.developer_url != '-' %}
+                      <a href="{{ l.developer_url }}" target="_blank" class="table-link">Open</a>
+                    {% else %}
+                      <span class="na-text">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td data-label="GenAI Completed">
+                    {% if l.approval_status == "Completed" %}
+                      <span class="status-badge completed">
+                        <i class="fas fa-check-circle"></i> {{ l.approval_status }}
+                      </span>
+                    {% else %}
+                      {{ l.approval_status }}
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-search"></i>
+            </div>
+            {% if request.GET.search %}
+              <p>No learners found matching your criteria.</p>
+            {% else %}
+              <p>Use filters above and click Search to view data.</p>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add animation classes to stat cards
+      const statCards = document.querySelectorAll('.stat-card');
+      statCards.forEach((card, index) => {
+        card.style.setProperty('--animation-order', index + 1);
+      });
+      
+      // Collapsible filter section
+      const collapseBtn = document.getElementById('collapseFilters');
+      const filterContent = document.querySelector('.filter-content');
+      
+      collapseBtn.addEventListener('click', function() {
+        filterContent.classList.toggle('collapsed');
+        const icon = collapseBtn.querySelector('i');
+        if (filterContent.classList.contains('collapsed')) {
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        } else {
+          icon.classList.remove('fa-chevron-up');
+          icon.classList.add('fa-chevron-down');
+        }
+      });
+    });
+
+    // Sorting functionality
+    let sortDirections = {};
+
+    function sortTable(index, headerEl) {
+      const table = document.getElementById("learnersTable");
+      const tbody = table.tBodies[0];
+      const rows = Array.from(tbody.rows);
+
+      sortDirections[index] = !sortDirections[index];
+      const direction = sortDirections[index] ? 1 : -1;
+
+      document.querySelectorAll(".sort-icon").forEach(icon => icon.textContent = '↕');
+      headerEl.querySelector(".sort-icon").textContent = direction === 1 ? '▲' : '▼';
+
+      rows.sort((a, b) => {
+        let aText = a.cells[index].innerText.toLowerCase();
+        let bText = b.cells[index].innerText.toLowerCase();
+        return aText.localeCompare(bText) * direction;
+      });
+
+      rows.forEach((row, i) => {
+        row.cells[0].innerText = i + 1; 
+        tbody.appendChild(row);
+      });
+    }
+
+    
+document.addEventListener('DOMContentLoaded', function() {
+  // Get the search input and form
+  const searchInput = document.getElementById('tableSearch');
+  const form = document.querySelector('.intern-form');
+
+  // Prevent form submission on Enter
+
+
+  // Handle search input
+  if (searchInput) {
+    // Live search as typing
+    searchInput.addEventListener('keyup', performSearch);
+    
+    // Prevent Enter key from causing form submission
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        performSearch();
+      }
+    });
+  }
+
+  function performSearch() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const table = document.getElementById('learnersTable');
+    if (!table) return;
+
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      let found = false;
+      const cells = row.querySelectorAll('td');
+      
+      cells.forEach(cell => {
+        if (cell.textContent.toLowerCase().includes(searchTerm)) {
+          found = true;
+        }
+      });
+      
+      row.style.display = found ? '' : 'none';
+    });
+  }
+
+});
+    const columnGroups = {
+    personal: [7, 8, 9],
+    educational: [2, 3, 4, 5, 6],
+    program: [10,11],
+    status: [12] 
+  };
+
+const columnMapping = {
+  'RegistrationDate': 1,
+  'College': 2,
+  'branch': 3,
+  'year_of_graduation': 4,
+  'section': 5,
+  'roll_number': 6,
+  'student_name': 7,
+  'email': 8,
+  'mobile': 9,
+  'skills_boost_url': 10,
+  'developer_profile': 11,
+  'approval_status': 12
+};
+
+  // Create reverse mappings
+  const reverseColumnMapping = {};
+  Object.entries(columnMapping).forEach(([key, value]) => {
+    reverseColumnMapping[value] = key;
+  });
+
+  const columnToGroups = {};
+  Object.entries(columnGroups).forEach(([group, columns]) => {
+    columns.forEach(col => {
+      if (!columnToGroups[col]) columnToGroups[col] = [];
+      columnToGroups[col].push(group);
+    });
+  });
+
+  let visibleColumns = new Set([0, 1,2, 6, 7, 8]); // Initial visible columns
+
+  // Initialize checkboxes and groups on load
+  document.addEventListener('DOMContentLoaded', () => {
+    // Initialize column checkboxes
+    visibleColumns.forEach(col => {
+      if (col !== 0 && reverseColumnMapping[col]) {
+        const checkbox = document.querySelector(`#columnDropdown input[value="${reverseColumnMapping[col]}"]`);
+        if (checkbox) checkbox.checked = true;
+      }
+    });
+
+
+  // Initialize All checkbox state
+  const allCheckbox = document.querySelector('#columnDropdown input[value="all"]');
+  const otherCheckboxes = document.querySelectorAll('#columnDropdown input[type="checkbox"]:not([value="all"])');
+  
+  // Set initial state
+  const allChecked = Array.from(otherCheckboxes).every(cb => cb.checked);
+  allCheckbox.checked = allChecked;
+  allCheckbox.indeterminate = false;
+    updateGroupCheckboxes();
+    updateSelectionCounts();
+    updateColumnVisibility();
+    addRemoveButtons();
+  });
+
+  // Group checkbox handler
+  document.querySelectorAll('#groupDropdown input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      const group = checkbox.value;
+      const columns = columnGroups[group];
+
+      columns.forEach(col => {
+        const columnValue = reverseColumnMapping[col];
+        const columnCheckbox = document.querySelector(`#columnDropdown input[value="${columnValue}"]`);
+        if (columnCheckbox) {
+          columnCheckbox.checked = checkbox.checked;
+          checkbox.checked ? visibleColumns.add(col) : visibleColumns.delete(col);
+        }
+      });
+
+      updateColumnVisibility();
+      updateSelectionCounts();
+    });
+  });
+
+  // Column checkbox handler
+  document.querySelectorAll('#columnDropdown input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        if (this.value === 'all') {
+          const isChecked = this.checked;
+          const otherCheckboxes = document.querySelectorAll('#columnDropdown input:not([value="all"])');
+          
+          otherCheckboxes.forEach(cb => {
+            cb.checked = isChecked;
+            const columnIndex = columnMapping[cb.value];
+            isChecked ? visibleColumns.add(columnIndex) : visibleColumns.delete(columnIndex);
+          });
+        } else {
+          const columnIndex = columnMapping[this.value];
+          this.checked ? visibleColumns.add(columnIndex) : visibleColumns.delete(columnIndex);
+          
+          // Update All checkbox state
+          const allCheckbox = document.querySelector('#columnDropdown input[value="all"]');
+          const otherCheckboxes = document.querySelectorAll('#columnDropdown input:not([value="all"])');
+          const allChecked = Array.from(otherCheckboxes).every(cb => cb.checked);
+          allCheckbox.checked = allChecked;
+          allCheckbox.indeterminate = !allChecked && Array.from(otherCheckboxes).some(cb => cb.checked);
+        }
+
+        updateGroupCheckboxes();
+        updateColumnVisibility();
+        updateSelectionCounts();
+      });
+    });
+
+  function toggleDropdown(type) {
+  const dropdown = document.getElementById(`${type}Dropdown`);
+  const allDropdowns = document.querySelectorAll('.dropdown-list');
+  allDropdowns.forEach(d => {
+    if(d !== dropdown) d.classList.remove('show');
+  });
+  dropdown.classList.toggle('show');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.multiselect-dropdown')) {
+    document.querySelectorAll('.dropdown-list').forEach(d => d.classList.remove('show'));
+  }
+});
+
+// Handle group checkbox changes
+document.querySelectorAll('#groupDropdown input[type="checkbox"]').forEach(checkbox => {
+  checkbox.addEventListener('change', () => {
+    const group = checkbox.value;
+    const columns = columnGroups[group];
+    
+    if(checkbox.checked) {
+      columns.forEach(col => visibleColumns.add(col));
+    } else {
+      columns.forEach(col => visibleColumns.delete(col));
+    }
+    
+    updateColumnVisibility();
+    updateSelectionCounts();
+  });
+});
+
+// Handle column checkbox changes
+document.querySelectorAll('#columnDropdown input[type="checkbox"]').forEach(checkbox => {
+  checkbox.addEventListener('change', () => {
+    const column = columnMapping[checkbox.value];
+    
+    if(checkbox.checked) {
+      visibleColumns.add(column);
+    } else {
+      visibleColumns.delete(column);
+    }
+    
+    updateColumnVisibility();
+    updateSelectionCounts();
+  });
+});
+
+function updateSelectionCounts() {
+  const groupChecked = document.querySelectorAll('#groupDropdown input:checked').length;
+  const columnChecked = document.querySelectorAll('#columnDropdown input:checked').length;
+  
+  document.getElementById('groupCount').textContent = groupChecked;
+  document.getElementById('columnCount').textContent = columnChecked;
+}
+// Add this helper function to update group checkboxes
+function updateGroupCheckboxes() {
+  Object.entries(columnGroups).forEach(([group, columns]) => {
+    const groupCheckbox = document.querySelector(`#groupDropdown input[value="${group}"]`);
+    if (groupCheckbox) {
+      groupCheckbox.checked = columns.every(col => visibleColumns.has(col));
+    }
+  });
+}
+    function updateColumnVisibility() {
+      const table = document.getElementById('learnersTable');
+      if (!table) return;
+
+      const headers = table.querySelectorAll('th');
+      headers.forEach((th, index) => {
+        th.style.display = visibleColumns.has(index) ? '' : 'none';
+      });
+
+      table.querySelectorAll('td').forEach((td, index) => {
+        const colIndex = index % headers.length;
+        td.style.display = visibleColumns.has(colIndex) ? '' : 'none';
+      });
+    }
+
+  // Add remove buttons to column headers
+    function addRemoveButtons() {
+      document.querySelectorAll('#learnersTable th').forEach((th, index) => {
+        if (index !== 0) {
+          const existingBtn = th.querySelector('.remove-column');
+          if (existingBtn) existingBtn.remove();
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'remove-column';
+          removeBtn.innerHTML = '×';
+          removeBtn.type = 'button'; 
+          removeBtn.onclick = () => {
+            const columnId = Object.keys(columnMapping).find(key => columnMapping[key] === index);
+            const checkbox = document.querySelector(`#columnDropdown input[value="${columnId}"]`);
+            if (checkbox) {
+              checkbox.checked = false;
+              checkbox.dispatchEvent(new Event('change'));
+            }
+          };
+          th.appendChild(removeBtn);
+        }
+      });
+    }
+
+
+
+
+  </script>
+</body>
+</html>

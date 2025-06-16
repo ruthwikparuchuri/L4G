@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+  <h2>Login</h2>
+
+  {% if form.errors %}
+    <p style="color: red;">Invalid credentials. Please try again.</p>
+  {% endif %}
+
+  {% if next %}
+    <p style="color: green;">You have been logged out. Please login again.</p>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+  </form>
+</body>
+</html>

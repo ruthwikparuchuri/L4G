@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Success</title>
+</head>
+<body>
+    <h2>Welcome, {{ user.username }}!</h2>
+    <p>You have successfully logged in.</p>
+
+    <form method="post" action="{% url 'dashboard:logout' %}">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+    </form>
+</body>
+</html>
