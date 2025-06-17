@@ -23,10 +23,10 @@ urlpatterns = [
 
 
     path('analytics/', views.college_dashboard_redirect, name='college_dashboard_redirect'),
+    path('select/', views.college_redirect_by_l4gcode, name='college_redirect_by_l4gcode'),
 
     path('analytics/<str:l4g_code>/', views.college_dashboard_view, name='college_dashboard'),
-    path('analytics/<str:l4g_code>/program/genai_internship_2025/', views.genai_internship_dashboard_2025, name='genai_internship_dashboard_2025'),
+    path('analytics/<str:l4g_code>/program/genai_internship_dashboard_2025/', views.genai_internship_dashboard_2025, name='genai_internship_dashboard_2025'),
+    path('analytics/<str:l4g_code>/program/geminiworkshop_2025/', views.geminiworkshop_2025, name='geminiworkshop_2025'),
     path('analytics/<str:l4g_code>/program/genai_dashboard_2025/', views.genai_dashboard_2025, name='genai_dashboard_2025'),
-    path('analytics/<str:l4g_code>/program/geminiworkshop_2025/', views.geminiworkshop_2025, name='geminiworkshop_2025')
-
 ]

@@ -1,16 +1,11 @@
-<!-- {% load static %} -->
-
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Dashboard</title>
+   <title>All colleges Dashboard</title>
    <!-- Include Select2 CSS -->
    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <!-- <link rel="'stylesheet" href="{% static 'dashboard/css/style.css' %}"> -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
@@ -77,6 +72,13 @@
            font-size: 21px; /* Increase font size for headings */
            font-weight: bold;
        }
+       .sort-icon {
+        margin-left: 0.25rem;
+        font-size: 0.75rem;
+        opacity: 0.7;
+        display: inline-block;
+        vertical-align: middle;
+        }
        @media (max-width: 480px) {
            .card {
                flex: 1 1 100%; /* Ensure cards take full width on smaller screens */
@@ -98,9 +100,8 @@
            cursor: pointer;
        }
        .rounded-dark-button:hover {
-           background: linear-gradient(to bottom, #222, #000);
-           background-color: #600000;
-           }
+            background-color: #600000;
+        }
 
 
        table { width: 100%; border-collapse: collapse; }
@@ -117,9 +118,21 @@
        }
 
 
-       .container h1 {
+       .container h1,h2 {
            text-align: center;
        }
+       .table-container {
+            width: 95%;
+            overflow-x: auto;
+        }
+        a {
+            text-decoration: none;
+            color:rgb(255, 255, 255);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
 
 
        .logout-button {
@@ -226,72 +239,172 @@
        } */
 
 
-       .back-button-container {
-    position: absolute; /* Or fixed if you want it to stay while scrolling */
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.back-button {
+              .search-box {
+    display: flex;
+    align-items: center;
     background-color: #1e1e1e;
-    color: #fff;
-    border: 2px solid #333;
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-size: 16px;
-    text-decoration: none;
-    display: inline-block;
-    transition: background-color 0.3s ease;
+    border: 1px solid #ffffff;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin: 5px 10px;
+    width: 250px;
 }
 
-.back-button:hover {
-    background-color: #600000;
+.search-box i {
     color: #fff;
+    margin-right: 10px;
+}
+
+.search-box input {
+    border: none;
+    background: transparent;
+    color: white;
+    width: 100%;
+    outline: none;
+    font-size: 14px;
 }
 
   </style>
 </head>
 <body>
 
-<div class="container mt-5">
+    <h2>Select College to View Dashboard</h2>
 
-{% if request.user.userprofile.college == "L4G" %}
-    <div class="back-button-container">
-        <a href="{% url 'dashboard:college_dashboard_redirect' %}" class="back-button">
-            ← Back to All Colleges Dashboard
-        </a>
-    </div>
-{% endif %}
-    
-    <h2>{{ college.name }} - College Dashboard</h2>
-
-    
-
-
-    <form method="get" class="form-inline mb-4">
-        <label for="programSelect" class="mr-2">Select Program:</label>
-        <select name="program" id="programSelect" class="form-control mr-2">
-            <option value="">-- Select --</option>
-            {% for program in programs %}
-                <option value="{{ program.id }}" {% if program.id|stringformat:"s" == selected_program_id %}selected{% endif %}>
-                    {{ program.name }}
-                </option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="btn btn-primary">View</button>
-    </form>
-
-
-    <div class="cards-container" style="display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
-        <div class="card" style="background-color: #600000; color: white; padding: 20px; margin: 10px; border-radius: 10px; width: 300px; text-align: center;">
-            <h3>Total Learners</h3>
-            <p style="font-size: 36px; font-weight: bold;">{{ total_learners }}</p>
+    <div class="cards-container">
+        <div class="card">
+            <h2>Total Colleges</h2>
+            <p>{{ total_colleges }}</p>
+        </div>
+        <div class="card">
+            <h2>Total Learners</h2>
+            <p>{{ total_learners }}</p>
         </div>
     </div>
-</div>
+
+     <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="tableSearch" placeholder="Search College...">
+    </div>
+
+    <div class="table-container">
+        <table id="learnersTable" border="1">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th onclick="sortTable(1, this)">College Name<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(2, this)">Number of Learners<span class="sort-icon">↕</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for college in institutions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{% url 'dashboard:college_redirect_by_l4gcode' %}?l4g_code={{ college.l4g_code }}">
+                                {{ college.name }}
+                            </a>
+                        </td>
+                        <td>{{ college.learner_count }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align:center;">No colleges found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
 
+    
+<script>
+ // Table sorting functionality
+let sortDirection = 1; // 1 for ascending, -1 for descending
+let lastSortedColumn = null;
+
+function sortTable(columnIndex, headerElement) {
+  const table = document.getElementById('learnersTable');
+  if (!table) return;
+  
+  const tbody = table.getElementsByTagName('tbody')[0];
+  const rows = Array.from(tbody.getElementsByTagName('tr'));
+  
+  // Toggle sort direction if clicking the same column
+  if (lastSortedColumn === columnIndex) {
+    sortDirection *= -1;
+  } else {
+    sortDirection = 1;
+    lastSortedColumn = columnIndex;
+  }
+  
+  // Reset all sort icons
+  const sortIcons = document.querySelectorAll('.sort-icon');
+  sortIcons.forEach(icon => {
+    icon.textContent = '↕';
+  });
+  
+  // Update the clicked column's sort icon
+  const sortIcon = headerElement.querySelector('.sort-icon');
+  if (sortIcon) {
+    sortIcon.textContent = sortDirection === 1 ? '↓' : '↑';
+  }
+  
+  // Sort the rows
+  rows.sort((a, b) => {
+    const aCell = a.cells[columnIndex];
+    const bCell = b.cells[columnIndex];
+    
+    // Use data-sort-value attribute if available, otherwise use text content
+    let aText = aCell.getAttribute('data-sort-value') || aCell.textContent.trim().toLowerCase();
+    let bText = bCell.getAttribute('data-sort-value') || bCell.textContent.trim().toLowerCase();
+    
+    // Handle special sort values for worklog status
+    if (columnIndex === 13) { // Worklog status column
+      if (aText.includes('view')) aText = 'z'; // Sort uploaded at the end
+      if (bText.includes('view')) bText = 'z';
+      if (aText.includes('not uploaded')) aText = 'a'; // Sort not uploaded at the beginning
+      if (bText.includes('not uploaded')) bText = 'a';
+    }
+    
+    // Handle special sort values for completion status
+    if (aText.includes('yes')) aText = 'z'; // Sort 'Yes' at the end
+    if (bText.includes('yes')) bText = 'z';
+    if (aText.includes('no')) aText = 'a'; // Sort 'No' at the beginning
+    if (bText.includes('no')) bText = 'a';
+    
+    return aText.localeCompare(bText) * sortDirection;
+  });
+  
+  
+      rows.forEach((row, i) => {
+        row.cells[0].innerText = i + 1; 
+        tbody.appendChild(row);
+      });
+}
+
+document.getElementById('tableSearch')?.addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const table = document.getElementById('learnersTable');
+    if (!table) return;
+    
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+      let found = false;
+      const cells = rows[i].getElementsByTagName('td');
+      
+      for (let j = 0; j < cells.length; j++) {
+        const cellText = cells[j].textContent.toLowerCase();
+        if (cellText.indexOf(searchTerm) > -1) {
+          found = true;
+          break;
+        }
+      }
+      
+      rows[i].style.display = found ? '' : 'none';
+    }
+  });
+</script>
 
 </body>
 </html>
