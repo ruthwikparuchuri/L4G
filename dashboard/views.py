@@ -13,8 +13,10 @@ from django.db.models import Q
 from main.models import Learner_Program_Progress,Learner_Module_Progress,Learner_Course_Progress,Learner_Specialization_Progress
 from main.models import Learner_Employment, Institution, Program
 from django.db.models import Count
-
+from main.models import Institution_Program_Requirement_General as iprg, Institution_Program_Requirement_Specific as iprs
+from django.db.models import Sum
 from django.db.models import Prefetch
+
 
 
 def genai_summer_internship_dashboard(request):
@@ -674,8 +676,6 @@ def login_success(request):
 
 ###########################################################################################################
 
-
-
 @login_required
 def college_dashboard_redirect(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
@@ -688,18 +688,35 @@ def college_dashboard_redirect(request):
         total_learners = sum(c.learner_count for c in institutions)
         total_colleges = institutions.count()
 
+        # Total unique programs
+        total_programs = iprg.objects.values('program_code').distinct().count()
+
+        # Attach program details to each institution
+        for institution in institutions:
+            specific_reqs = iprs.objects.filter(
+                institution_code=institution
+            ).select_related('institution_program_requirement_general_code__program_code')
+
+            unique_programs = set()
+            for req in specific_reqs:
+                program = req.institution_program_requirement_general_code.program_code
+                unique_programs.add(program)
+
+            institution.program_count = len(unique_programs)
+            institution.program_names = sorted(p.name for p in unique_programs)
+
         return render(request, 'dashboard/all_college_dashboard.html', {
             'institutions': institutions,
             'total_learners': total_learners,
-            'total_colleges': total_colleges
+            'total_colleges': total_colleges,
+            'total_programs': total_programs,
         })
 
     try:
         college_obj = Institution.objects.get(name=user_profile.college)
         return redirect('dashboard:college_dashboard', l4g_code=college_obj.l4g_code)
     except Institution.DoesNotExist:
-        return redirect('dashboard:login')   ## Redirect to login change this line with production login view
-
+        return redirect('dashboard:login')  # Change to production login URL
 
 @login_required
 def college_redirect_by_l4gcode(request):
@@ -707,10 +724,21 @@ def college_redirect_by_l4gcode(request):
     return redirect('dashboard:college_dashboard', l4g_code=l4g_code)
 
     
+def get_programs_for_institution(institution):
+    specific_reqs = iprs.objects.filter(
+        institution_code=institution
+    ).select_related('institution_program_requirement_general_code__program_code')
+
+    unique_programs = set()
+    for req in specific_reqs:
+        program = req.institution_program_requirement_general_code.program_code
+        unique_programs.add(program)
+
+    return sorted(unique_programs, key=lambda p: p.name)
+
 @login_required
 def college_dashboard_view(request, l4g_code):
     college_obj = get_object_or_404(Institution, l4g_code=l4g_code)
-
     program_id = request.GET.get('program')
 
     if program_id == '4':
@@ -722,13 +750,18 @@ def college_dashboard_view(request, l4g_code):
 
     total_learners = le.objects.filter(institution_code=college_obj).count()
 
+    available_programs = get_programs_for_institution(college_obj)
+
     return render(request, 'dashboard/college_dashboard.html', {
         'college': college_obj,
-        'programs': Program.objects.all(),
+        'programs': available_programs,
         'total_learners': total_learners,
         'selected_program_id': program_id,
+        'program_count': len(available_programs),
+        'program_names': [p.name for p in available_programs],
         'error': 'Please select a program to continue.'
     })
+
 
 
 
@@ -833,6 +866,7 @@ def genai_internship_dashboard_2025(request, l4g_code):
 
     learning_hours = (metric_counts.get('beginner_completions', 0) * 8) + (metric_counts.get('intermediate_completions', 0) * 15) + ( metric_counts.get('advanced_completions', 0) * 19)
 
+    available_programs = get_programs_for_institution(college_obj)
     context = {
         'learners': learners_data,
         'selected_branch': selected_branch,
@@ -844,7 +878,8 @@ def genai_internship_dashboard_2025(request, l4g_code):
         'years_of_graduation': years_of_graduation,
         'sections': sections,
         'program_id': str(program_id),
-        'programs': Program.objects.all(), 
+        'programs': available_programs, 
+        "college" : college_obj,
 
         'onboarded_count': metric_counts.get('onboarded_count', 0),
         'active_count': metric_counts.get('active_count', 0),
@@ -875,8 +910,7 @@ def genai_internship_dashboard_2025(request, l4g_code):
         return response
 
     return render(request, 'dashboard/genai_internship_dashboard_2025.html', context)
-from main.models import Institution_Program_Requirement_General as iprg, Institution_Program_Requirement_Specific as iprs
-from django.db.models import Sum
+
 
 @login_required
 def geminiworkshop_2025(request, l4g_code):
@@ -989,6 +1023,8 @@ def geminiworkshop_2025(request, l4g_code):
 
     context['learners'] = filtered_learners if search_triggered else raw_learners_data
 
+    available_programs = get_programs_for_institution(college_obj)
+
     # Filter dropdowns
     context.update({
         'branches': sorted(le.objects.filter(institution_code=college_obj).values_list('branch_code__name', flat=True).distinct()),
@@ -1001,7 +1037,8 @@ def geminiworkshop_2025(request, l4g_code):
         'total_events': Event.objects.filter(institution=college_obj).count(),
 
         'program_id': str(program_id),
-        'programs': Program.objects.all(),
+        'programs': available_programs,
+        "college" : college_obj,
     })
 
     # CSV Download
@@ -1028,8 +1065,6 @@ def geminiworkshop_2025(request, l4g_code):
 
 
 
-from main.models import Institution_Program_Requirement_Specific as iprs
-from main.models import Institution_Program_Requirement_General as iprg
 
 @login_required
 def genai_dashboard_2025(request, l4g_code):
@@ -1166,6 +1201,8 @@ def genai_dashboard_2025(request, l4g_code):
 
     learning_hours = (metric_counts.get('beginner_completions', 0) * 8) + (metric_counts.get('intermediate_completions', 0) * 15) + ( metric_counts.get('advanced_completions', 0) * 19)
 
+    available_programs = get_programs_for_institution(college_obj)
+    
     return render(request, 'dashboard/collegewise_genai2025registration.html', {
         'learners': learners_data,
         'selected_branch': selected_branch,
@@ -1179,7 +1216,8 @@ def genai_dashboard_2025(request, l4g_code):
         'genders': genders,
         'institutions': institutions,
         'program_id': str(program_id),
-        'programs': Program.objects.all(),
+        'programs': available_programs,
+        "college" : college_obj,
 
         'onboarded_count': metric_counts.get('onboarded_count', 0),
         'active_count': metric_counts.get('active_count', 0),

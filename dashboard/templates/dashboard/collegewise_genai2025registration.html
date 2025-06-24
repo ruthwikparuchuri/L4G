@@ -194,7 +194,7 @@
 {% endif %}
 
     <div class="college">
-        <h2>{{ request.user.userprofile.college }} - GenAI 2025 Dashboard</h2>
+        <h2>{{ college.name }} - GenAI 2025 Dashboard</h2>
     </div>
 
     <div class="cards-container">
@@ -209,10 +209,6 @@
     <div class="card">
         <h2>Active Learners</h2>
         <p>{{ active_count }}</p>
-    </div>
-    <div class="card">
-        <h2>Digital Badges</h2>
-        <p>{{ badges_count }}</p>
     </div>
     <div class="card">
         <h2>Program Completions</h2>
