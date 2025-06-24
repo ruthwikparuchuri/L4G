@@ -770,69 +770,87 @@ def genai_internship_dashboard_2025(request, l4g_code):
     selected_branch = request.GET.get('branch')
     selected_year = request.GET.get('year_of_graduation')
     selected_section = request.GET.get('section')
-    
     program_id = request.GET.get('program')
-
     action = request.GET.get('action')
 
     user_profile = get_object_or_404(UserProfile, user=request.user)
     college_obj = get_object_or_404(Institution, l4g_code=l4g_code)
-    
+
     if program_id == '3':
         return redirect('dashboard:geminiworkshop_2025', l4g_code=college_obj.l4g_code)
     elif program_id == '2':
         return redirect('dashboard:genai_dashboard_2025', l4g_code=college_obj.l4g_code)
-    
-    program_id = '4'
+
+    program_id = '4'  # GenAI Summer Internship program
+
+    filters_applied = bool(selected_branch or selected_year or selected_section)
 
     learners_data = []
-    learner_ids = lpr.objects.filter(program_requirement_code__program_code__id=program_id).values_list('learner_code_id', flat=True).distinct()
+    if filters_applied or action == 'download':
+        learner_ids = lpr.objects.filter(
+            program_requirement_code__program_code__id=program_id
+        ).values_list('learner_code_id', flat=True).distinct()
 
-    learners = l.objects.filter(id__in=learner_ids, learner_education__institution_code=college_obj).prefetch_related(
-        Prefetch('learner_education_set', to_attr='education_list'),
-        Prefetch('learner_program_requirement_set', to_attr='lpr_list')
-    )
-
-    if selected_branch:
-        learners = learners.filter(learner_education__branch_code__name=selected_branch)
-    if selected_year:
-        learners = learners.filter(learner_education__year_of_graduation=selected_year)
-    if selected_section:
-        learners = learners.filter(
-            learner_program_requirement__program_requirement_code__id=29,
-            learner_program_requirement__value=selected_section
+        learners = l.objects.filter(
+            id__in=learner_ids,
+            learner_education__institution_code=college_obj
+        ).prefetch_related(
+            Prefetch('learner_education_set', to_attr='education_list'),
+            Prefetch('learner_program_requirement_set', to_attr='lpr_list')
         )
 
-    for learner in learners:
-        education = learner.education_list[0] if learner.education_list else None
-        lpr_dict = {l.program_requirement_code.id: l.value for l in learner.lpr_list}
+        if selected_branch:
+            learners = learners.filter(learner_education__branch_code__name=selected_branch)
+        if selected_year:
+            learners = learners.filter(learner_education__year_of_graduation=selected_year)
+        if selected_section:
+            learners = learners.filter(
+                learner_program_requirement__program_requirement_code__id=29,
+                learner_program_requirement__value=selected_section
+            )
 
-        learners_data.append({
-            'id': learner.id,
-            'sno': len(learners_data) + 1,
-            'name': learner.name,
-            'email': lpr_dict.get(24, learner.email),
-            'college': education.institution_code.name if education else 'N/A',
-            'branch': education.branch_code.name if education else 'N/A',
-            'year_of_graduation': education.year_of_graduation if education else 'N/A',
-            'mobile': learner.mobile,
-            'section': lpr_dict.get(29, '-'),
-            'roll_number': lpr_dict.get(23, '-'),
-            'skills_boost_url': lpr_dict.get(28, '-'),
-            'developer_url': lpr_dict.get(27, '-'),
-            'registration_timestamp': lpr_dict.get(25, '-'),
-            'approval_status': lpr_dict.get(32) if lpr_dict.get(32) else 'No',
-        })
+        for learner in learners:
+            education = learner.education_list[0] if learner.education_list else None
+            lpr_dict = {lpr.program_requirement_code.id: lpr.value for lpr in learner.lpr_list}
+
+            learners_data.append({
+                'id': learner.id,
+                'sno': len(learners_data) + 1,
+                'name': learner.name,
+                'email': lpr_dict.get(24, learner.email),
+                'college': education.institution_code.name if education else 'N/A',
+                'branch': education.branch_code.name if education else 'N/A',
+                'year_of_graduation': education.year_of_graduation if education else 'N/A',
+                'mobile': learner.mobile,
+                'section': lpr_dict.get(29, '-'),
+                'roll_number': lpr_dict.get(23, '-'),
+                'skills_boost_url': lpr_dict.get(28, '-'),
+                'developer_url': lpr_dict.get(27, '-'),
+                'registration_timestamp': lpr_dict.get(25, '-'),
+                'approval_status': lpr_dict.get(32, 'No'),
+            })
 
     registered_count = len(learners_data)
-    branches = sorted(le.objects.filter(learner_code_id__in=learner_ids).values_list('branch_code__name', flat=True).distinct())
-    years_of_graduation = sorted(le.objects.filter(learner_code_id__in=learner_ids).values_list('year_of_graduation', flat=True).distinct())
-    sections = sorted(lpr.objects.filter(program_requirement_code__id=29).values_list('value', flat=True).distinct())
-    trainer_approved_count = sum(1 for learner in learners_data if learner['approval_status'] == 'Yes')
 
+    # For filters dropdowns
+    learner_ids_all = lpr.objects.filter(
+        program_requirement_code__program_code__id=program_id
+    ).values_list('learner_code_id', flat=True).distinct()
+
+    branches = sorted(le.objects.filter(
+        learner_code_id__in=learner_ids_all
+    ).values_list('branch_code__name', flat=True).distinct())
+
+    years_of_graduation = sorted(le.objects.filter(
+        learner_code_id__in=learner_ids_all
+    ).values_list('year_of_graduation', flat=True).distinct())
+
+    sections = sorted(lpr.objects.filter(
+        program_requirement_code__id=29
+    ).values_list('value', flat=True).distinct())
+
+    # Metrics
     general_reqs = iprg.objects.filter(program_code__id=program_id)
-
-    # Create a dynamic label-to-id map (based on name keywords)
     label_map = {
         'onboarded': 'onboarded_count',
         'active': 'active_count',
@@ -864,41 +882,21 @@ def genai_internship_dashboard_2025(request, l4g_code):
                 except:
                     metric_counts[label] = 0
 
-    learning_hours = (metric_counts.get('beginner_completions', 0) * 8) + (metric_counts.get('intermediate_completions', 0) * 15) + ( metric_counts.get('advanced_completions', 0) * 19)
+    learning_hours = (
+        metric_counts['beginner_completions'] * 8 +
+        metric_counts['intermediate_completions'] * 15 +
+        metric_counts['advanced_completions'] * 19
+    )
 
-    available_programs = get_programs_for_institution(college_obj)
-    context = {
-        'learners': learners_data,
-        'selected_branch': selected_branch,
-        'selected_year': selected_year,
-        'selected_section': selected_section,
-        'registered_count': registered_count,
-        'trainer_approved_count': trainer_approved_count,
-        'branches': branches,
-        'years_of_graduation': years_of_graduation,
-        'sections': sections,
-        'program_id': str(program_id),
-        'programs': available_programs, 
-        "college" : college_obj,
-
-        'onboarded_count': metric_counts.get('onboarded_count', 0),
-        'active_count': metric_counts.get('active_count', 0),
-        'program_completions': metric_counts.get('program_completions', 0),
-        'beginner_completions': metric_counts.get('beginner_completions', 0),
-        'intermediate_completions': metric_counts.get('intermediate_completions', 0),
-        'advanced_completions': metric_counts.get('advanced_completions', 0),
-        'learning_hours': learning_hours,
-    }
-
-    # CSV Download
+    # CSV download
     if action == 'download':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="Genai_summer_internship_2025_learner_data.csv"'
         writer = csv.writer(response)
         writer.writerow([
-            'S.No', 'Registration Timestamp', 'Roll Number', 'Student Name', 'Mobile Number', 'Email',
-            'Branch', 'Year of Graduation', 'Section', 'College', 'Google Skills Boost URL',
-            'Developer Profile Link', 'GenAI Completed'
+            'S.No', 'Registration Timestamp', 'Roll Number', 'Student Name', 'Mobile Number',
+            'Email', 'Branch', 'Year of Graduation', 'Section', 'College',
+            'Google Skills Boost URL', 'Developer Profile Link', 'GenAI Completed'
         ])
         for learner in learners_data:
             writer.writerow([
@@ -909,7 +907,32 @@ def genai_internship_dashboard_2025(request, l4g_code):
             ])
         return response
 
+    available_programs = get_programs_for_institution(college_obj)
+
+    context = {
+        'learners': learners_data,
+        'filters_applied': filters_applied,
+        'selected_branch': selected_branch,
+        'selected_year': selected_year,
+        'selected_section': selected_section,
+        'registered_count': registered_count,
+        'branches': branches,
+        'years_of_graduation': years_of_graduation,
+        'sections': sections,
+        'program_id': str(program_id),
+        'programs': available_programs,
+        'college': college_obj,
+        'onboarded_count': metric_counts['onboarded_count'],
+        'active_count': metric_counts['active_count'],
+        'program_completions': metric_counts['program_completions'],
+        'beginner_completions': metric_counts['beginner_completions'],
+        'intermediate_completions': metric_counts['intermediate_completions'],
+        'advanced_completions': metric_counts['advanced_completions'],
+        'learning_hours': learning_hours,
+    }
+
     return render(request, 'dashboard/genai_internship_dashboard_2025.html', context)
+
 
 
 @login_required
