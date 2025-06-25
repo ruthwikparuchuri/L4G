@@ -131,53 +131,53 @@
         }
 
         .search-box {
-    display: flex;
-    align-items: center;
-    background-color: #1e1e1e;
-    border: 1px solid #ffffff;
-    border-radius: 5px;
-    padding: 5px 10px;
-    margin: 5px 10px;
-    width: 250px;
-}
+            display: flex;
+            align-items: center;
+            background-color: #1e1e1e;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin: 5px 10px;
+            width: 250px;
+        }
 
-.search-box i {
-    color: #fff;
-    margin-right: 10px;
-}
+        .search-box i {
+            color: #fff;
+            margin-right: 10px;
+        }
 
-.search-box input {
-    border: none;
-    background: transparent;
-    color: white;
-    width: 100%;
-    outline: none;
-    font-size: 14px;
-}
+        .search-box input {
+            border: none;
+            background: transparent;
+            color: white;
+            width: 100%;
+            outline: none;
+            font-size: 14px;
+        }
 
-.back-button-container {
-    position: absolute; /* Or fixed if you want it to stay while scrolling */
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
+        .back-button-container {
+            position: absolute; /* Or fixed if you want it to stay while scrolling */
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
 
-.back-button {
-    background-color: #1e1e1e;
-    color: #fff;
-    border: 2px solid #333;
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-size: 16px;
-    text-decoration: none;
-    display: inline-block;
-    transition: background-color 0.3s ease;
-}
+        .back-button {
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 2px solid #333;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
 
-.back-button:hover {
-    background-color: #600000;
-    color: #fff;
-}
+        .back-button:hover {
+            background-color: #600000;
+            color: #fff;
+        }
 
 
     </style>
@@ -273,25 +273,27 @@
         <button type="submit" name="action" value="download" class="rounded-dark-button">Download CSV</button>
     </form>
 
-     <div class="search-box">
+    {% if filters_applied %}
+    <div class="search-box">
         <i class="fas fa-search"></i>
         <input type="text" id="tableSearch" placeholder="Search learners...">
     </div>
 
     <!-- Learner Table -->
     <div class="table-container">
-        <table id="learnersTable"  border="1" >
+        <table id="learnersTable" border="1">
             <thead>
                 <tr>
                     <th>S.No</th>
                     <th onclick="sortTable(1, this)">Timestamp <span class="sort-icon">↕</span></th>
-                    <th onclick="sortTable(2, this)" >Roll Number <span class="sort-icon">↕</span></th>
-                    <th>Name</th>
+                    <th onclick="sortTable(2, this)">Roll Number <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(3, this)">Name <span class="sort-icon">↕</span></th>
                     <th onclick="sortTable(4, this)">Gender <span class="sort-icon">↕</span></th>
                     <th>Mobile</th>
                     <th>Email</th>
                     <th onclick="sortTable(7, this)">Branch <span class="sort-icon">↕</span></th>
                     <th onclick="sortTable(8, this)">YOG <span class="sort-icon">↕</span></th>
+                    <th>Section</th>
                     <th>College</th>
                     <th>Skills Boost URL</th>
                 </tr>
@@ -308,6 +310,7 @@
                         <td>{{ learner.email }}</td>
                         <td>{{ learner.branch }}</td>
                         <td>{{ learner.year_of_graduation }}</td>
+                        <td>{{ learner.section|default:"-" }}</td>
                         <td>{{ learner.college }}</td>
                         <td>
                             {% if learner.skills_boost_url != '-' %}
@@ -323,6 +326,11 @@
             </tbody>
         </table>
     </div>
+{% else %}
+    <div style="text-align:center; margin:20px; font-weight:bold;">
+        Please apply filters to view learner data.
+    </div>
+{% endif %}
 
 
 <script>
@@ -366,19 +374,7 @@ function sortTable(columnIndex, headerElement) {
     let aText = aCell.getAttribute('data-sort-value') || aCell.textContent.trim().toLowerCase();
     let bText = bCell.getAttribute('data-sort-value') || bCell.textContent.trim().toLowerCase();
 
-    // Handle special sort values for worklog status
-    if (columnIndex === 13) { // Worklog status column
-      if (aText.includes('view')) aText = 'z'; // Sort uploaded at the end
-      if (bText.includes('view')) bText = 'z';
-      if (aText.includes('not uploaded')) aText = 'a'; // Sort not uploaded at the beginning
-      if (bText.includes('not uploaded')) bText = 'a';
-    }
-
-    // Handle special sort values for completion status
-    if (aText.includes('yes')) aText = 'z'; // Sort 'Yes' at the end
-    if (bText.includes('yes')) bText = 'z';
-    if (aText.includes('no')) aText = 'a'; // Sort 'No' at the beginning
-    if (bText.includes('no')) bText = 'a';
+    
 
     return aText.localeCompare(bText) * sortDirection;
   });
