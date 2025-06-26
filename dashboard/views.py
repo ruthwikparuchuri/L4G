@@ -792,13 +792,14 @@ def genai_internship_dashboard_2025(request, l4g_code):
 
     # Metric IDs from IPRG for Program 4
     metric_ids = {
-        20: 'total_registered_learners',
-        21: 'onboarded_count',
-        22: 'active_count',
-        23: 'program_completions',
-        24: 'beginner_completions',
-        25: 'intermediate_completions',
-        26: 'advanced_completions',
+        26: 'total_registered_learners',
+        27: 'onboarded_count',
+        28: 'active_count',
+        29: 'program_completions',
+        30: 'beginner_completions',
+        31: 'intermediate_completions',
+        32: 'advanced_completions',
+        33: 'certified_students',
     }
 
     metric_counts = {v: 0 for v in metric_ids.values()}
@@ -842,7 +843,7 @@ def genai_internship_dashboard_2025(request, l4g_code):
 
         filtered_ids = learners.values_list('id', flat=True)
 
-        # ✅ Update counts from LearnerProgramProgress
+        # Update counts from LearnerProgramProgress
         metric_counts['onboarded_count'] = Learner_Program_Progress.objects.filter(
             learner_code_id__in=filtered_ids,
             program_code_id=program_id,
@@ -861,10 +862,10 @@ def genai_internship_dashboard_2025(request, l4g_code):
             is_completed=True
         ).count()
 
-        # ✅ Update total registered learners dynamically
+        # Update total registered learners dynamically
         metric_counts['total_registered_learners'] = learners.count()
 
-        # ✅ Update beginner, intermediate, advanced completions from Learner_Course_Progress
+        # Update beginner, intermediate, advanced completions from Learner_Course_Progress
         metric_counts['beginner_completions'] = Learner_Course_Progress.objects.filter(
             learner_code_id__in=filtered_ids,
             course_code_id=1,  # Beginner course ID
@@ -882,6 +883,12 @@ def genai_internship_dashboard_2025(request, l4g_code):
             course_code_id=3,  # Advanced course ID
             is_completed=True
         ).count()
+
+        metric_counts['certified_students'] = lpr.objects.filter(
+            learner_code_id__in=filtered_ids,
+            program_requirement_code_id=20, # Certified Students PR id
+        ).exclude(Q(value__isnull=True) | Q(value='')).count()
+
 
         for learner in learners:
             education = learner.education_list[0] if learner.education_list else None
@@ -973,9 +980,11 @@ def genai_internship_dashboard_2025(request, l4g_code):
         'intermediate_completions': metric_counts['intermediate_completions'],
         'advanced_completions': metric_counts['advanced_completions'],
         'learning_hours': learning_hours,
+        'certified_students': metric_counts['certified_students'],
     }
 
-    return render(request, 'dashboard/genai_internship_dashboard_2025.html', context)
+    return render(request, 'dashboard/collegewise_genai_internship_dashboard_2025.html', context)
+
 
 
 
@@ -1013,6 +1022,7 @@ def geminiworkshop_2025(request, l4g_code):
         17: 'worklog_submitted_count',
         18: 'trainer_approved_count',
         19: 'certified_students_count',
+
     }
 
     general_reqs = iprg.objects.filter(program_code__id=program_id)
