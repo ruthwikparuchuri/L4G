@@ -1427,7 +1427,6 @@ def genai_dashboard_2025(request, l4g_code):
 
 @login_required
 def genai_dashboard_2024(request, l4g_code):
-    # GET filters
     selected_branch = request.GET.get('branch')
     selected_section = request.GET.get('section')
     selected_gender = request.GET.get('gender')
@@ -1445,15 +1444,12 @@ def genai_dashboard_2024(request, l4g_code):
         return redirect('dashboard:geminiworkshop_2025', l4g_code=l4g_code)
     elif program_id == '2':
         return redirect('dashboard:genai_dashboard_2025', l4g_code=college_obj.l4g_code)
-        
+
     program_id = '1'  # GenAI 2024
-
-    
-
     filters_applied = bool(selected_branch or selected_section or selected_gender or selected_yog)
     learners_data = []
 
-    # Metric IDs from IPRG for Program 1
+    # Metric counts
     metric_ids = {
         1: 'registered_count',
         2: 'onboarded_count',
@@ -1465,10 +1461,8 @@ def genai_dashboard_2024(request, l4g_code):
     }
     metric_counts = {v: 0 for v in metric_ids.values()}
 
-    # Base queryset
     learners_qs = Temp_Genai.objects.filter(college=temp_college.name)
 
-    # Apply filters
     if selected_branch:
         learners_qs = learners_qs.filter(branch_code__name=selected_branch)
     if selected_section:
@@ -1479,7 +1473,6 @@ def genai_dashboard_2024(request, l4g_code):
         learners_qs = learners_qs.filter(year_of_joining=selected_yog).exclude(year_of_joining__isnull=True)
 
     if not filters_applied:
-        # Use predefined values from IPRS table
         general_reqs = iprg.objects.filter(program_code__id=program_id, id__in=metric_ids.keys())
         for req in general_reqs:
             label = metric_ids.get(req.id)
@@ -1492,7 +1485,6 @@ def genai_dashboard_2024(request, l4g_code):
             except:
                 metric_counts[label] = 0
     else:
-        # Calculate dynamic metrics from filtered learners
         metric_counts['registered_count'] = learners_qs.count()
         metric_counts['onboarded_count'] = learners_qs.filter(enrollment_status__iexact='active').count()
         metric_counts['active_count'] = learners_qs.filter(enrollment_status__iexact='active').count()
@@ -1501,7 +1493,6 @@ def genai_dashboard_2024(request, l4g_code):
         metric_counts['intermediate_completions'] = learners_qs.filter(intermediate_status__iexact='Yes').count()
         metric_counts['advanced_completions'] = learners_qs.filter(advanced_status__iexact='Yes').count()
 
-    # Final learner loop
     for i, learner in enumerate(learners_qs, 1):
         timestamp_str = learner.timestamp
         try:
@@ -1527,26 +1518,30 @@ def genai_dashboard_2024(request, l4g_code):
             'roll_number': learner.rollno,
             'skills_boost_url': learner.url,
             'registration_timestamp': timestamp_str,
+            'beginner': 'Yes' if learner.beginner_status and learner.beginner_status.lower() == 'yes' else 'No',
+            'intermediate': 'Yes' if learner.intermediate_status and learner.intermediate_status.lower() == 'yes' else 'No',
+            'advanced': 'Yes' if learner.advanced_status and learner.advanced_status.lower() == 'yes' else 'No',
+            'program_completion': 'Yes' if learner.completion_status and learner.completion_status.lower() == 'completed' else 'No',
         })
 
-    # CSV Export
     if action == 'download':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="Genai_2024_learners.csv"'
         writer = csv.writer(response)
         writer.writerow([
             'S.No', 'Timestamp', 'Roll Number', 'Student Name', 'Gender', 'Mobile', 'Email',
-            'Branch', 'Year of Joining', 'Section', 'College', 'Google Skills Boost URL'
+            'Branch', 'Year of Joining', 'Section', 'College', 'Google Skills Boost URL',
+            'Beginner', 'Intermediate', 'Advanced', 'Program Completion'
         ])
         for learner in learners_data:
             writer.writerow([
                 learner['sno'], learner['registration_timestamp'], learner['roll_number'],
                 learner['name'], learner['gender'], learner['mobile'], learner['email'], learner['branch'],
-                learner['year_of_joining'], learner['section'], learner['college'], learner['skills_boost_url']
+                learner['year_of_joining'], learner['section'], learner['college'], learner['skills_boost_url'],
+                learner['beginner'], learner['intermediate'], learner['advanced'], learner['program_completion']
             ])
         return response
 
-    # Dropdown filter values (excluding nulls)
     branches = sorted(Branch.objects.values_list('name', flat=True).distinct())
     sections = sorted(set(
         Temp_Genai.objects.filter(college=temp_college.name).exclude(section__isnull=True).values_list('section', flat=True)
@@ -1556,7 +1551,6 @@ def genai_dashboard_2024(request, l4g_code):
         Temp_Genai.objects.exclude(year_of_joining__isnull=True).values_list('year_of_joining', flat=True)
     ))
 
-    # Learning hour calculation
     learning_hours = (
         metric_counts['beginner_completions'] * 8 +
         metric_counts['intermediate_completions'] * 15 +
@@ -1588,3 +1582,4 @@ def genai_dashboard_2024(request, l4g_code):
     }
 
     return render(request, 'dashboard/collegewise_genai2024registration.html', context)
+
