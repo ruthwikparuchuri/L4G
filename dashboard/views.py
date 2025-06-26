@@ -786,11 +786,9 @@ def genai_internship_dashboard_2025(request, l4g_code):
         return redirect('dashboard:genai_dashboard_2024', l4g_code=college_obj.l4g_code)
 
     program_id = '4'  # GenAI Summer Internship
-
     filters_applied = bool(selected_branch or selected_year or selected_section)
     learners_data = []
 
-    # Metric IDs from IPRG for Program 4
     metric_ids = {
         26: 'total_registered_learners',
         27: 'onboarded_count',
@@ -801,12 +799,10 @@ def genai_internship_dashboard_2025(request, l4g_code):
         32: 'advanced_completions',
         33: 'certified_students',
     }
-
     metric_counts = {v: 0 for v in metric_ids.values()}
 
     if not filters_applied:
         general_reqs = iprg.objects.filter(program_code__id=program_id, id__in=metric_ids.keys())
-
         for req in general_reqs:
             label = metric_ids.get(req.id)
             value = iprs.objects.filter(
@@ -818,7 +814,6 @@ def genai_internship_dashboard_2025(request, l4g_code):
             except:
                 metric_counts[label] = 0
     else:
-        # Get filtered learner queryset
         learner_ids = lpr.objects.filter(
             program_requirement_code__program_code__id=program_id
         ).values_list('learner_code_id', flat=True).distinct()
@@ -843,7 +838,6 @@ def genai_internship_dashboard_2025(request, l4g_code):
 
         filtered_ids = learners.values_list('id', flat=True)
 
-        # Update counts from LearnerProgramProgress
         metric_counts['onboarded_count'] = Learner_Program_Progress.objects.filter(
             learner_code_id__in=filtered_ids,
             program_code_id=program_id,
@@ -862,37 +856,49 @@ def genai_internship_dashboard_2025(request, l4g_code):
             is_completed=True
         ).count()
 
-        # Update total registered learners dynamically
         metric_counts['total_registered_learners'] = learners.count()
 
-        # Update beginner, intermediate, advanced completions from Learner_Course_Progress
         metric_counts['beginner_completions'] = Learner_Course_Progress.objects.filter(
             learner_code_id__in=filtered_ids,
-            course_code_id=1,  # Beginner course ID
+            course_code_id=1,
             is_completed=True
         ).count()
 
         metric_counts['intermediate_completions'] = Learner_Course_Progress.objects.filter(
             learner_code_id__in=filtered_ids,
-            course_code_id=2,  # Intermediate course ID
+            course_code_id=2,
             is_completed=True
         ).count()
 
         metric_counts['advanced_completions'] = Learner_Course_Progress.objects.filter(
             learner_code_id__in=filtered_ids,
-            course_code_id=3,  # Advanced course ID
+            course_code_id=3,
             is_completed=True
         ).count()
 
         metric_counts['certified_students'] = lpr.objects.filter(
             learner_code_id__in=filtered_ids,
-            program_requirement_code_id=20, # Certified Students PR id
+            program_requirement_code_id=20
         ).exclude(Q(value__isnull=True) | Q(value='')).count()
-
 
         for learner in learners:
             education = learner.education_list[0] if learner.education_list else None
             lpr_dict = {lpr.program_requirement_code.id: lpr.value for lpr in learner.lpr_list}
+
+            learner_id = learner.id
+
+            beginner_done = Learner_Course_Progress.objects.filter(
+                learner_code_id=learner_id, course_code_id=1, is_completed=True
+            ).exists()
+            intermediate_done = Learner_Course_Progress.objects.filter(
+                learner_code_id=learner_id, course_code_id=2, is_completed=True
+            ).exists()
+            advanced_done = Learner_Course_Progress.objects.filter(
+                learner_code_id=learner_id, course_code_id=3, is_completed=True
+            ).exists()
+            program_completed = Learner_Program_Progress.objects.filter(
+                learner_code_id=learner_id, program_code_id=program_id, is_completed=True
+            ).exists()
 
             learners_data.append({
                 'id': learner.id,
@@ -909,11 +915,14 @@ def genai_internship_dashboard_2025(request, l4g_code):
                 'developer_url': lpr_dict.get(27, '-'),
                 'registration_timestamp': lpr_dict.get(25, '-'),
                 'approval_status': lpr_dict.get(32, 'No'),
+                'beginner': 'Yes' if beginner_done else 'No',
+                'intermediate': 'Yes' if intermediate_done else 'No',
+                'advanced': 'Yes' if advanced_done else 'No',
+                'program_completion': 'Yes' if program_completed else 'No',
             })
 
     registered_count = len(learners_data)
 
-    # Filters dropdown
     learner_ids_all = lpr.objects.filter(
         program_requirement_code__program_code__id=program_id
     ).values_list('learner_code_id', flat=True).distinct()
@@ -936,7 +945,6 @@ def genai_internship_dashboard_2025(request, l4g_code):
         metric_counts['advanced_completions'] * 19
     )
 
-    # CSV Download
     if action == 'download':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="Genai_summer_internship_2025_learner_data.csv"'
@@ -944,14 +952,16 @@ def genai_internship_dashboard_2025(request, l4g_code):
         writer.writerow([
             'S.No', 'Registration Timestamp', 'Roll Number', 'Student Name', 'Mobile Number',
             'Email', 'Branch', 'Year of Graduation', 'Section', 'College',
-            'Google Skills Boost URL', 'Developer Profile Link', 'GenAI Completed'
+            'Google Skills Boost URL', 'Developer Profile Link', 'GenAI Completed',
+            'Beginner', 'Intermediate', 'Advanced', 'Program Completion'
         ])
         for learner in learners_data:
             writer.writerow([
                 learner['sno'], learner['registration_timestamp'], learner['roll_number'],
                 learner['name'], learner['mobile'], learner['email'], learner['branch'],
                 learner['year_of_graduation'], learner['section'], learner['college'],
-                learner['skills_boost_url'], learner['developer_url'], learner['approval_status']
+                learner['skills_boost_url'], learner['developer_url'], learner['approval_status'],
+                learner['beginner'], learner['intermediate'], learner['advanced'], learner['program_completion']
             ])
         return response
 
@@ -970,8 +980,6 @@ def genai_internship_dashboard_2025(request, l4g_code):
         'program_id': str(program_id),
         'programs': available_programs,
         'college': college_obj,
-
-        # Final metric outputs for cards
         'total_registered_learners': metric_counts['total_registered_learners'],
         'onboarded_count': metric_counts['onboarded_count'],
         'active_count': metric_counts['active_count'],
@@ -984,6 +992,7 @@ def genai_internship_dashboard_2025(request, l4g_code):
     }
 
     return render(request, 'dashboard/collegewise_genai_internship_dashboard_2025.html', context)
+
 
 
 
@@ -1176,9 +1185,9 @@ def geminiworkshop_2025(request, l4g_code):
 
 @login_required
 def genai_dashboard_2025(request, l4g_code):
-
     user_profile = get_object_or_404(UserProfile, user=request.user)
     college_obj = get_object_or_404(Institution, l4g_code=l4g_code)
+
     # GET filters
     selected_branch = request.GET.get('branch')
     selected_year = request.GET.get('year_of_graduation')
@@ -1195,8 +1204,7 @@ def genai_dashboard_2025(request, l4g_code):
     elif program_id == '1':
         return redirect('dashboard:genai_dashboard_2024', l4g_code=college_obj.l4g_code)
 
-    program_id = '2'  # GenAI 2025 Program
-    
+    program_id = '2'  # GenAI 2025
 
     filters_applied = bool(selected_branch or selected_year or selected_section or selected_gender or selected_college)
     learners_data = []
@@ -1225,14 +1233,26 @@ def genai_dashboard_2025(request, l4g_code):
                 metric_counts[label] = int(value)
             except:
                 metric_counts[label] = 0
-    else:
-        # Get filtered learner IDs
-        learner_ids_filtered = lpr.objects.filter(
+
+        learner_ids = lpr.objects.filter(
             program_requirement_code__program_code__id=program_id
         ).values_list('learner_code_id', flat=True).distinct()
 
-        learners_filtered = l.objects.filter(
-            id__in=learner_ids_filtered,
+        learners = l.objects.filter(
+            id__in=learner_ids,
+            learner_education__institution_code=college_obj
+        ).prefetch_related(
+            Prefetch('learner_education_set', to_attr='education_list'),
+            Prefetch('learner_program_requirement_set', to_attr='lpr_list')
+        )
+
+    else:
+        learner_ids = lpr.objects.filter(
+            program_requirement_code__program_code__id=program_id
+        ).values_list('learner_code_id', flat=True).distinct()
+
+        learners = l.objects.filter(
+            id__in=learner_ids,
             learner_education__institution_code=college_obj
         ).prefetch_related(
             Prefetch('learner_education_set', to_attr='education_list'),
@@ -1240,20 +1260,19 @@ def genai_dashboard_2025(request, l4g_code):
         )
 
         if selected_branch:
-            learners_filtered = learners_filtered.filter(learner_education__branch_code__name=selected_branch)
+            learners = learners.filter(learner_education__branch_code__name=selected_branch)
         if selected_year:
-            learners_filtered = learners_filtered.filter(learner_education__year_of_graduation=selected_year)
+            learners = learners.filter(learner_education__year_of_graduation=selected_year)
         if selected_section:
-            learners_filtered = learners_filtered.filter(
+            learners = learners.filter(
                 learner_program_requirement__program_requirement_code__id=29,
                 learner_program_requirement__value=selected_section
             )
         if selected_gender:
-            learners_filtered = learners_filtered.filter(gender=selected_gender)
+            learners = learners.filter(gender=selected_gender)
 
-        filtered_ids = learners_filtered.values_list('id', flat=True)
+        filtered_ids = learners.values_list('id', flat=True)
 
-        # ✅ Update metrics using Learner_Program_Progress
         metric_counts['onboarded_count'] = Learner_Program_Progress.objects.filter(
             learner_code_id__in=filtered_ids,
             program_code_id=program_id,
@@ -1272,7 +1291,6 @@ def genai_dashboard_2025(request, l4g_code):
             is_completed=True
         ).count()
 
-        # ✅ Course completions from Learner_Course_Progress
         metric_counts['beginner_completions'] = Learner_Course_Progress.objects.filter(
             learner_code_id__in=filtered_ids,
             course_code_id=1,
@@ -1291,32 +1309,24 @@ def genai_dashboard_2025(request, l4g_code):
             is_completed=True
         ).count()
 
-        learners = learners_filtered
-    # If no filters, fetch all learners
-    if not filters_applied:
-        learner_ids = lpr.objects.filter(
-            program_requirement_code__program_code__id=program_id
-        ).values_list('learner_code_id', flat=True).distinct()
-
-        learners = l.objects.filter(
-            id__in=learner_ids,
-            learner_education__institution_code=college_obj
-        ).prefetch_related(
-            Prefetch('learner_education_set', to_attr='education_list'),
-            Prefetch('learner_program_requirement_set', to_attr='lpr_list')
-        )
-
     # Final learner loop
     for learner in learners:
         education = learner.education_list[0] if learner.education_list else None
         lpr_dict = {l.program_requirement_code.id: l.value for l in learner.lpr_list}
-        timestamp_raw = lpr_dict.get(6)
-        try:
-            timestamp_parsed = datetime.strptime(timestamp_raw, "%Y/%m/%d %H:%M:%S") if timestamp_raw else None
-            if timestamp_parsed and is_naive(timestamp_parsed):
-                timestamp_parsed = make_aware(timestamp_parsed)
-        except:
-            timestamp_parsed = None
+
+        # Completion flags
+        beginner_status = Learner_Course_Progress.objects.filter(
+            learner_code=learner, course_code_id=1, is_completed=True
+        ).exists()
+        intermediate_status = Learner_Course_Progress.objects.filter(
+            learner_code=learner, course_code_id=2, is_completed=True
+        ).exists()
+        advanced_status = Learner_Course_Progress.objects.filter(
+            learner_code=learner, course_code_id=3, is_completed=True
+        ).exists()
+        program_completion_status = Learner_Program_Progress.objects.filter(
+            learner_code=learner, program_code_id=program_id, is_completed=True
+        ).exists()
 
         learners_data.append({
             'id': learner.id,
@@ -1332,27 +1342,33 @@ def genai_dashboard_2025(request, l4g_code):
             'registration_timestamp': lpr_dict.get(6, '-'),
             'gender': learner.gender,
             'section': lpr_dict.get(29, '-'),
+            'beginner': 'Yes' if beginner_status else 'No',
+            'intermediate': 'Yes' if intermediate_status else 'No',
+            'advanced': 'Yes' if advanced_status else 'No',
+            'program_completion': 'Yes' if program_completion_status else 'No',
         })
 
-    # CSV download
+    # CSV export
     if action == 'download':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="Genai_2025_collegewise_registrations.csv"'
         writer = csv.writer(response)
         writer.writerow([
             'S.No', 'Timestamp', 'Roll Number', 'Student Name', 'Gender', 'Mobile', 'Email',
-            'Branch', 'YOG', 'Section', 'College', 'Google Skills Boost URL'
+            'Branch', 'YOG', 'Section', 'College', 'Google Skills Boost URL',
+            'Beginner', 'Intermediate', 'Advanced', 'Program Completion'
         ])
         for learner in learners_data:
             writer.writerow([
                 learner['sno'], learner['registration_timestamp'], learner['roll_number'],
                 learner['name'], learner['gender'], learner['mobile'], learner['email'], learner['branch'],
                 learner['year_of_graduation'], learner.get('section', '-'), learner['college'],
-                learner['skills_boost_url']
+                learner['skills_boost_url'], learner['beginner'], learner['intermediate'],
+                learner['advanced'], learner['program_completion']
             ])
         return response
 
-    # Dropdown filter values
+    # Dropdowns
     learner_ids_all = lpr.objects.filter(
         program_requirement_code__program_code__id=program_id
     ).values_list('learner_code_id', flat=True).distinct()
@@ -1395,8 +1411,6 @@ def genai_dashboard_2025(request, l4g_code):
         'program_id': str(program_id),
         'programs': available_programs,
         'college': college_obj,
-
-        # Final metric outputs for cards
         'onboarded_count': metric_counts['onboarded_count'],
         'active_count': metric_counts['active_count'],
         'program_completions': metric_counts['program_completions'],
@@ -1407,6 +1421,7 @@ def genai_dashboard_2025(request, l4g_code):
     }
 
     return render(request, 'dashboard/collegewise_genai2025registration.html', context)
+
 
 
 
