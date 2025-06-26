@@ -1,0 +1,459 @@
+<!-- {% load static %} -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Gemini Workshop 2025 Dashboard</title>
+   <!-- Include Select2 CSS -->
+   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <!-- <link rel="'stylesheet" href="{% static 'dashboard/css/style.css' %}"> -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+  <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            margin: 0;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: #600000;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1 1 300px;
+            max-width: 300px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+        }
+
+        .card p {
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .filters select, .filters input[type="date"] {
+            margin: 5px 10px;
+            padding: 6px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        .filters button {
+            margin: 5px;
+        }
+
+        .rounded-dark-button {
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 2px solid #333;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .rounded-dark-button:hover {
+            background-color: #600000;
+        }
+
+        .table-container {
+            width: 95%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        tr:hover {
+            background-color: #600000;
+        }
+        table { width: 100%; border-collapse: collapse; }
+       th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+       th { cursor: pointer; background-color:rgb(69, 62, 62);}
+       .sort-button { cursor: pointer; }
+       /* tr:nth-child(even) { background-color: #181818;} /* Stripe color */ 
+       tr:hover { background-color: #480000; /* Hover highlight color */ }
+
+        .college h2 {
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .sort-icon {
+        margin-left: 0.25rem;
+        font-size: 0.75rem;
+        opacity: 0.7;
+        display: inline-block;
+        vertical-align: middle;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                flex: 1 1 100%;
+            }
+            .filters select, .filters input[type="date"] {
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: #1e1e1e;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin: 5px 10px;
+            width: 250px;
+        }
+
+        .search-box i {
+            color: #fff;
+            margin-right: 10px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            color: white;
+            width: 100%;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .back-button-container {
+            position: absolute; /* Or fixed if you want it to stay while scrolling */
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .back-button {
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 2px solid #333;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #600000;
+            color: #fff;
+        }
+
+
+    </style>
+</head>
+<body>
+
+
+{% if request.user.userprofile.college == "L4G" %}
+    <div class="back-button-container">
+        <a href="{% url 'dashboard:college_dashboard_redirect' %}" class="back-button">
+            ← Back to All Colleges Dashboard
+        </a>
+    </div>
+{% endif %}
+
+    <div class="college">
+        <h2>{{ college.name }} - Gemini Workshop 2025 Dashboard</h2>
+    </div>
+
+   <!-- Summary Cards -->
+<div class="cards-container">
+
+    <div class="card">
+        <h2>Total Events</h2>
+        <p>{{ total_events }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Registered Students</h2>
+        <p>{{ registered_count }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Flash Completed</h2>
+        <p>{{ flash_completed_count }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Worklog Submitted</h2>
+        <p>{{ worklog_submitted_count }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Worklog Not Submitted</h2>
+        <p>{{ worklog_not_submitted_count }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Trainer Approved</h2>
+        <p>{{ trainer_approved_count }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Trainer Not Approved</h2>
+        <p>{{ trainer_not_approved_count }}</p>
+    </div>
+    <div class="card">
+        <h2>Certified Students</h2>
+        <p>{{ total_certified_count }}</p>
+    </div>
+
+</div>
+
+
+    <!-- Filter Form -->
+    <form method="get" class="filters">
+        <select name="program" onchange="this.form.submit()">
+        {% for p in programs %}
+            <option value="{{ p.id }}" {% if p.id|stringformat:"s" == program_id %}selected{% endif %}>{{ p.name }}</option>
+        {% endfor %}
+        </select>
+
+        
+        <select id="event_id" name="event_id">
+            <option value="">All Events</option>
+            {% for event in events %}
+                <option value="{{ event.id }}" {% if event.id == selected_event_id %}selected{% endif %}>
+                  {{ event.event_name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="branch">
+            <option value="">All Branches</option>
+            {% for b in branches %}
+                <option value="{{ b }}" {% if b == selected_branch %}selected{% endif %}>{{ b }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="year_of_graduation">
+            <option value="">All YOG</option>
+            {% for y in years_of_graduation %}
+                <option value="{{ y }}" {% if y|stringformat:"s" == selected_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="section">
+            <option value="">All Sections</option>
+            {% for s in sections %}
+                <option value="{{ s }}" {% if s == selected_section %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="rounded-dark-button">Apply Filters</button>
+        <button type="submit" name="action" value="download" class="rounded-dark-button">Download CSV</button>
+
+    </form>
+
+{% if filters_applied %}
+
+     <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="tableSearch" placeholder="Search learners...">
+    </div>
+
+    <!-- Learner Table -->
+    <div class="table-container">
+        <table id="learnersTable" border="1">
+                <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th onclick="sortTable(1, this)">Event<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(2, this)">Roll Number<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(3, this)">Name<span class="sort-icon">↕</span></th>
+                    <th>Mobile</th>
+                    <th>Email</th>
+                    <th onclick="sortTable(6, this)">Branch<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(7, this)">YOG<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(9, this)">Section<span class="sort-icon">↕</span></th>
+                    <th>College</th>
+                    <th>Skills Boost URL</th>
+                    <th>Developer Profile</th>
+                    <th onclick="sortTable(12, this)">Screenshot<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(13, this)">Flash Completed<span class="sort-icon">↕</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for learner in learners %}
+                    <tr>
+                        <td>{{ learner.sno }}</td>
+                        <td>{{ learner.event_name }}</td>
+                        <td>{{ learner.roll_number }}</td>
+                        <td>{{ learner.name }}</td>
+                        <td>{{ learner.mobile }}</td>
+                        <td>{{ learner.email }}</td>
+                        <td>{{ learner.branch }}</td>
+                        <td>{{ learner.year_of_graduation }}</td>
+                        <td>{{ learner.section }}</td>                        
+                        <td>{{ learner.college }}</td>
+                        <td>
+                            {% if learner.skills_boost_url != '-' %}
+                                <a href="{{ learner.skills_boost_url }}" target="_blank">Link</a>
+                            {% else %}None{% endif %}
+                        </td>
+                        <td>
+                            {% if learner.developer_url != '-' %}
+                                <a href="{{ learner.developer_url }}" target="_blank">Link</a>
+                            {% else %}None{% endif %}
+                        </td>
+                        <td>
+                            {% if learner.screenshot != 'Not Uploaded' %}
+                                <a href="{{ learner.screenshot }}" target="_blank">View</a>
+                            {% else %}Not Uploaded{% endif %}
+                        </td>
+                        <td>{{ learner.flash_completed }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="14" style="text-align:center;">No learners found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+  <p style="text-align:center; font-size:16px; margin-top:10px;">
+    Please apply any filter and click <strong>Apply Filters</strong> to view learners or You can click on <strong>Download CSV</strong> to download the complete list of learners.
+  </p>
+{% endif %}
+<script>
+ // Table sorting functionality
+let sortDirection = 1; // 1 for ascending, -1 for descending
+let lastSortedColumn = null;
+
+function sortTable(columnIndex, headerElement) {
+  const table = document.getElementById('learnersTable');
+  if (!table) return;
+  
+  const tbody = table.getElementsByTagName('tbody')[0];
+  const rows = Array.from(tbody.getElementsByTagName('tr'));
+  
+  // Toggle sort direction if clicking the same column
+  if (lastSortedColumn === columnIndex) {
+    sortDirection *= -1;
+  } else {
+    sortDirection = 1;
+    lastSortedColumn = columnIndex;
+  }
+  
+  // Reset all sort icons
+  const sortIcons = document.querySelectorAll('.sort-icon');
+  sortIcons.forEach(icon => {
+    icon.textContent = '↕';
+  });
+  
+  // Update the clicked column's sort icon
+  const sortIcon = headerElement.querySelector('.sort-icon');
+  if (sortIcon) {
+    sortIcon.textContent = sortDirection === 1 ? '↓' : '↑';
+  }
+  
+  // Sort the rows
+  rows.sort((a, b) => {
+    const aCell = a.cells[columnIndex];
+    const bCell = b.cells[columnIndex];
+    
+    // Use data-sort-value attribute if available, otherwise use text content
+    let aText = aCell.getAttribute('data-sort-value') || aCell.textContent.trim().toLowerCase();
+    let bText = bCell.getAttribute('data-sort-value') || bCell.textContent.trim().toLowerCase();
+    
+    // Handle special sort values for worklog status
+    if (columnIndex === 12) { // Worklog status column
+      if (aText.includes('view')) aText = 'z'; // Sort uploaded at the end
+      if (bText.includes('view')) bText = 'z';
+      if (aText.includes('not uploaded')) aText = 'a'; // Sort not uploaded at the beginning
+      if (bText.includes('not uploaded')) bText = 'a';
+    }
+    
+    // Handle special sort values for completion status
+    if (aText.includes('yes')) aText = 'z'; // Sort 'Yes' at the end
+    if (bText.includes('yes')) bText = 'z';
+    if (aText.includes('no')) aText = 'a'; // Sort 'No' at the beginning
+    if (bText.includes('no')) bText = 'a';
+    
+    return aText.localeCompare(bText) * sortDirection;
+  });
+  
+  
+      rows.forEach((row, i) => {
+        row.cells[0].innerText = i + 1; 
+        tbody.appendChild(row);
+      });
+}
+
+document.getElementById('tableSearch')?.addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const table = document.getElementById('learnersTable');
+    if (!table) return;
+    
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+      let found = false;
+      const cells = rows[i].getElementsByTagName('td');
+      
+      for (let j = 0; j < cells.length; j++) {
+        const cellText = cells[j].textContent.toLowerCase();
+        if (cellText.indexOf(searchTerm) > -1) {
+          found = true;
+          break;
+        }
+      }
+      
+      rows[i].style.display = found ? '' : 'none';
+    }
+  });
+</script>
+</body>
+</html>

@@ -29,4 +29,5 @@ urlpatterns = [
     path('analytics/<str:l4g_code>/program/genai_internship_dashboard_2025/', views.genai_internship_dashboard_2025, name='genai_internship_dashboard_2025'),
     path('analytics/<str:l4g_code>/program/geminiworkshop_2025/', views.geminiworkshop_2025, name='geminiworkshop_2025'),
     path('analytics/<str:l4g_code>/program/genai_dashboard_2025/', views.genai_dashboard_2025, name='genai_dashboard_2025'),
+    path('analytics/<str:l4g_code>/program/genai_dashboard_2024/', views.genai_dashboard_2024, name='genai_dashboard_2024'),
 ]
