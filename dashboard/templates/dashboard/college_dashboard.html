@@ -31,33 +31,32 @@
            padding-top: 20px; /* Add some padding to the top */
        }
        .cards-container {
-           display: flex;
-           flex-wrap: wrap;
-           justify-content: center;
-           margin-bottom: 5px;
-           width: 100%; /* Ensure it spans the full width */
-       }
-       .card {
-           background-color: #600000; /* #1e1e1e Slightly lighter dark background for card */
-           padding: 5px;
-           margin: 5px;
-           border-radius: 10px;
-           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-           text-align: center;
-           flex: 1 1 300px; /* Ensure cards have equal width */
-           max-width: 300px; /* Set a maximum width for the cards */
-       }
-       .card h2 {
-           font-size: 18px; /* Increase font size for headings */
-           font-weight: normal;
-           /* color: #7ee8d3 */
-       }
-       .card p {
-           font-size: 36px; /* Increase font size for numbers */
-           font-weight: bold; /* Optionally make the numbers bold */
-           margin-top: 10px; /* Add some space between heading and number */
-           /* color: #DC7633 */
-       }
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: #600000;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1 1 250px;
+            max-width: 300px;
+        }
+
+        .card h2 {
+            font-size: 15px;
+        }
+
+        .card p {
+            font-size: 30px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
        .filters {
            display: flex;
            flex-wrap: wrap;
@@ -109,9 +108,26 @@
         }
 
 
-       table { width: 100%; border-collapse: collapse; }
-       th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-       th { cursor: pointer;  background-color:rgb(69, 62, 62); }
+       .table-container {
+            width: 98%;
+            overflow-x: auto;
+        }
+
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th, td { 
+            padding: 6px; 
+            text-align: left; 
+            border-bottom: 1px solid #ddd; 
+            font-size: 14px;
+        }
+        th { 
+            cursor: pointer; 
+            background-color:rgb(69, 62, 62);
+        }
        .sort-button { cursor: pointer; }
        /* tr:nth-child(even) { background-color: #181818;} /* Stripe color */ 
        tr:hover { background-color: #480000; /* Hover highlight color */ }
@@ -237,52 +253,52 @@
 
 
        .search-box {
-    display: flex;
-    align-items: center;
-    background-color: #1e1e1e;
-    border: 1px solid #ffffff;
-    border-radius: 5px;
-    padding: 5px 10px;
-    margin: 5px 10px;
-    width: 250px;
-}
+            display: flex;
+            align-items: center;
+            background-color: #1e1e1e;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin: 5px 10px;
+            width: 250px;
+        }
 
-.search-box i {
-    color: #fff;
-    margin-right: 10px;
-}
+        .search-box i {
+            color: #fff;
+            margin-right: 10px;
+        }
 
-.search-box input {
-    border: none;
-    background: transparent;
-    color: white;
-    width: 100%;
-    outline: none;
-    font-size: 14px;
-}
-.back-button-container {
-    position: absolute; /* Or fixed if you want it to stay while scrolling */
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
+        .search-box input {
+            border: none;
+            background: transparent;
+            color: white;
+            width: 100%;
+            outline: none;
+            font-size: 14px;
+        }
+        .back-button-container {
+            position: absolute; /* Or fixed if you want it to stay while scrolling */
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
 
-.back-button {
-    background-color: #1e1e1e;
-    color: #fff;
-    border: 2px solid #333;
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-size: 16px;
-    text-decoration: none;
-    display: inline-block;
-    transition: background-color 0.3s ease;
-}
+        .back-button {
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 2px solid #333;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
 
-.back-button:hover {
-    background-color: #600000;
-    color: #fff;
-}
+        .back-button:hover {
+            background-color: #600000;
+            color: #fff;
+        }
 
 
 
@@ -290,34 +306,35 @@
   </style>
 </head>
 <body>
-
 <div class="container mt-5">
 
-{% if request.user.userprofile.college == "L4G" %}
-    <div class="back-button-container">
-        <a href="{% url 'dashboard:college_dashboard_redirect' %}" class="back-button">
-            ← Back to All Colleges Dashboard
-        </a>
-    </div>
-{% endif %}
+    {% if request.user.userprofile.college == "L4G" %}
+        <div class="back-button-container">
+            <a href="{% url 'dashboard:college_dashboard_redirect' %}" class="back-button">
+                ← Back to All Colleges Dashboard
+            </a>
+        </div>
+    {% endif %}
     
-    <h2>{{ college.name }} - College Dashboard</h2>
+    <h2 class="mb-4">{{ college.name }} - College Dashboard</h2>
 
-    
-
-
-
-<div class="cards-container">
-    <div class="card">
-        <h2>Total Programs</h2>
-        <p>{{ program_count }}</p>
+    <!-- Metrics Cards -->
+    <div class="cards-container">
+        <div class="card">
+            <h2>Total Programs</h2>
+            <p>{{ program_count }}</p>
+        </div>
+        <div class="card">
+            <h2>Total Learners</h2>
+            <p>{{ learners }}</p>
+        </div>
+        <div class="card">
+            <h2>Program Completions</h2>
+            <p>{{ program_completions }}</p>
+        </div>
     </div>
-    <div class="card">
-        <h2>Total Learners</h2>
-        <p>{{ total_learners }}</p>
-    </div>
-</div>
-    
+
+    <!-- Program Filter Form -->
     <form method="get" class="filters">
         <select name="program" id="programSelect" class="form-control mr-2">
             <option value="">-- Select Program --</option>
@@ -329,7 +346,6 @@
         </select>
         <button type="submit" class="rounded-dark-button">View</button>
     </form>
-</div>
 
 
 

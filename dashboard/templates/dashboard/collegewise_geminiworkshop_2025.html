@@ -45,11 +45,11 @@
         }
 
         .card h2 {
-            font-size: 18px;
+            font-size: 15px;
         }
 
         .card p {
-            font-size: 36px;
+            font-size: 30px;
             font-weight: bold;
             margin-top: 10px;
         }
@@ -91,28 +91,28 @@
         }
 
         .table-container {
-            width: 95%;
+            width: 98%;
             overflow-x: auto;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 40px;
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th, td { 
+            padding: 6px; 
+            text-align: left; 
+            border-bottom: 1px solid #ddd; 
+            font-size: 14px;
+        }
+        th { 
+            cursor: pointer; 
+            background-color:rgb(69, 62, 62);
         }
 
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #444;
-        }
 
-        tr:hover {
-            background-color: #600000;
-        }
-        table { width: 100%; border-collapse: collapse; }
-       th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-       th { cursor: pointer; background-color:rgb(69, 62, 62);}
+
        .sort-button { cursor: pointer; }
        /* tr:nth-child(even) { background-color: #181818;} /* Stripe color */ 
        tr:hover { background-color: #480000; /* Hover highlight color */ }
@@ -244,10 +244,6 @@
         <h2>Trainer Not Approved</h2>
         <p>{{ trainer_not_approved_count }}</p>
     </div>
-    <div class="card">
-        <h2>Certified Students</h2>
-        <p>{{ total_certified_count }}</p>
-    </div>
 
 </div>
 
@@ -316,12 +312,11 @@
                     <th>Email</th>
                     <th onclick="sortTable(6, this)">Branch<span class="sort-icon">↕</span></th>
                     <th onclick="sortTable(7, this)">YOG<span class="sort-icon">↕</span></th>
-                    <th onclick="sortTable(9, this)">Section<span class="sort-icon">↕</span></th>
-                    <th>College</th>
+                    <th onclick="sortTable(8, this)">Section<span class="sort-icon">↕</span></th>
                     <th>Skills Boost URL</th>
                     <th>Developer Profile</th>
-                    <th onclick="sortTable(12, this)">Screenshot<span class="sort-icon">↕</span></th>
-                    <th onclick="sortTable(13, this)">Flash Completed<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(11, this)">Screenshot<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(12, this)">Gemini Workshop Completed<span class="sort-icon">↕</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -335,8 +330,7 @@
                         <td>{{ learner.email }}</td>
                         <td>{{ learner.branch }}</td>
                         <td>{{ learner.year_of_graduation }}</td>
-                        <td>{{ learner.section }}</td>                        
-                        <td>{{ learner.college }}</td>
+                        <td>{{ learner.section }}</td>     
                         <td>
                             {% if learner.skills_boost_url != '-' %}
                                 <a href="{{ learner.skills_boost_url }}" target="_blank">Link</a>
@@ -352,7 +346,7 @@
                                 <a href="{{ learner.screenshot }}" target="_blank">View</a>
                             {% else %}Not Uploaded{% endif %}
                         </td>
-                        <td>{{ learner.flash_completed }}</td>
+                        <td>{{ learner.flash_completed }}</td> 
                     </tr>
                 {% empty %}
                     <tr>

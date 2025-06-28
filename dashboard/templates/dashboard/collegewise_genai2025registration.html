@@ -35,11 +35,11 @@
         }
 
         .card h2 {
-            font-size: 18px;
+            font-size: 15px;
         }
 
         .card p {
-            font-size: 36px;
+            font-size: 30px;
             font-weight: bold;
             margin-top: 10px;
         }
@@ -81,28 +81,28 @@
         }
 
         .table-container {
-            width: 95%;
+            width: 98%;
             overflow-x: auto;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 40px;
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th, td { 
+            padding: 6px; 
+            text-align: left; 
+            border-bottom: 1px solid #ddd; 
+            font-size: 14px;
+        }
+        th { 
+            cursor: pointer; 
+            background-color:rgb(69, 62, 62);
         }
 
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #444;
-        }
 
-        tr:hover {
-            background-color: #600000;
-        }
-        table { width: 100%; border-collapse: collapse; }
-       th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-       th { cursor: pointer; background-color:rgb(69, 62, 62);}
+
        .sort-button { cursor: pointer; }
        /* tr:nth-child(even) { background-color: #181818;} /* Stripe color */ 
        tr:hover { background-color: #480000; /* Hover highlight color */ }
@@ -248,17 +248,11 @@
 
         <select name="year_of_graduation">
             <option value="">All YOG</option>
-            {% for year in years_of_graduation %}
-                <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+            {% for y in years_of_graduation %}
+                <option value="{{ y }}" {% if y|stringformat:"s" == selected_year %}selected{% endif %}>{{ y }}</option>
             {% endfor %}
         </select>
 
-        <select name="section">
-            <option value="">All Sections</option>
-            {% for sec in sections %}
-                <option value="{{ sec }}" {% if selected_section == sec %}selected{% endif %}>{{ sec }}</option>
-            {% endfor %}
-        </select>
 
         <select name="gender">
             <option value="">All Genders</option>
@@ -283,63 +277,57 @@
     <div class="table-container">
         <table id="learnersTable" border="1">
             <thead>
-                    <tr>
-                        <th>S.No</th>
-                        <th onclick="sortTable(1, this)">Timestamp <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable(2, this)">Roll Number <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable(3, this)">Name <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable(4, this)">Gender <span class="sort-icon">↕</span></th>
-                        <th>Mobile</th>
-                        <th>Email</th>
-                        <th onclick="sortTable(7, this)">Branch <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable(8, this)">YOG <span class="sort-icon">↕</span></th>
-                        <th>Section</th>
-                        <th>College</th>
-                        <th>Skills Boost URL</th>
-                        <th>Beginner</th>
-                        <th>Intermediate</th>
-                        <th>Advanced</th>
-                        <th>Program Completion</th>
-                    </tr>
+                <tr>
+                    <th>S.No</th>
+                    <th onclick="sortTable(1, this)">Timestamp <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(2, this)">Roll Number <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(3, this)">Name <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(4, this)">Gender <span class="sort-icon">↕</span></th>
+                    <th>Mobile</th>
+                    <th>Email</th>
+                    <th onclick="sortTable(7, this)">Branch <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(8, this)">YOG <span class="sort-icon">↕</span></th>
+                    <th>Skills Boost URL</th>
+                    <th onclick="sortTable(10, this)">Beginner<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(11, this)">Intermediate<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(12, this)">Advanced<span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable(13, this)">GenAI Program Completed<span class="sort-icon">↕</span></th>
+                </tr>
             </thead>
-
             <tbody>
-                    {% for learner in learners %}
-                        <tr>
-                            <td>{{ learner.sno }}</td>
-                            <td>{{ learner.registration_timestamp }}</td>
-                            <td>{{ learner.roll_number }}</td>
-                            <td>{{ learner.name }}</td>
-                            <td>{{ learner.gender }}</td>
-                            <td>{{ learner.mobile }}</td>
-                            <td>{{ learner.email }}</td>
-                            <td>{{ learner.branch }}</td>
-                            <td>{{ learner.year_of_graduation }}</td>
-                            <td>{{ learner.section|default:"-" }}</td>
-                            <td>{{ learner.college }}</td>
-                            <td>
-                                {% if learner.skills_boost_url != '-' %}
-                                    <a href="{{ learner.skills_boost_url }}" target="_blank">Link</a>
-                                {% else %}None{% endif %}
-                            </td>
-                            <td>{{ learner.beginner }}</td>
-                            <td>{{ learner.intermediate }}</td>
-                            <td>{{ learner.advanced }}</td>
-                            <td>{{ learner.program_completion }}</td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="16" style="text-align: center;">No learners found for selected filters.</td>
-                        </tr>
-                    {% endfor %}
+                {% for learner in learners %}
+                    <tr>
+                        <td>{{ learner.sno }}</td>
+                        <td>{{ learner.registration_timestamp }}</td>
+                        <td>{{ learner.roll_number }}</td>
+                        <td>{{ learner.name }}</td>
+                        <td>{{ learner.gender }}</td>
+                        <td>{{ learner.mobile }}</td>
+                        <td>{{ learner.email }}</td>
+                        <td>{{ learner.branch }}</td>
+                        <td>{{ learner.year_of_graduation }}</td>
+                        <td>
+                            {% if learner.skills_boost_url != '-' %}
+                                <a href="{{ learner.skills_boost_url }}" target="_blank">Link</a>
+                            {% else %}None{% endif %}
+                        </td>
+                        <td>{{ learner.beginner }}</td>
+                        <td>{{ learner.intermediate }}</td>
+                        <td>{{ learner.advanced }}</td>
+                        <td>{{ learner.program_completion }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="12" style="text-align: center;">No learners found for selected filters.</td>
+                    </tr>
+                {% endfor %}
             </tbody>
-
         </table>
     </div>
 {% else %}
-    <div style="text-align:center; margin:20px; font-weight:bold;">
-        Please apply any filter and click Apply Filters to view learners or You can click on Download CSV to download the complete list of learners
-    </div>
+    <p style="text-align:center; font-size:16px; margin-top:10px;">
+        Please apply any filter and click <strong>Apply Filters</strong> to view learners or You can click on <strong>Download CSV</strong> to download the complete list of learners.
+    </p>
 {% endif %}
 
 

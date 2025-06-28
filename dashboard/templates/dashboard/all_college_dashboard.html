@@ -40,15 +40,14 @@
         }
 
         .card h2 {
-            font-size: 18px;
+            font-size: 15px;
         }
 
         .card p {
-            font-size: 36px;
+            font-size: 30px;
             font-weight: bold;
             margin-top: 10px;
         }
-
         .filters {
             display: flex;
             flex-wrap: wrap;
@@ -86,28 +85,26 @@
         }
 
         .table-container {
-            width: 95%;
+            width: 98%;
             overflow-x: auto;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 40px;
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        th, td { 
+            padding: 6px; 
+            text-align: left; 
+            border-bottom: 1px solid #ddd; 
+            font-size: 14px;
+        }
+        th { 
+            cursor: pointer; 
+            background-color:rgb(69, 62, 62);
         }
 
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #444;
-        }
-
-        tr:hover {
-            background-color: #600000;
-        }
-        table { width: 100%; border-collapse: collapse; }
-       th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-       th { cursor: pointer; background-color:rgb(69, 62, 62);}
        .sort-button { cursor: pointer; }
        /* tr:nth-child(even) { background-color: #181818;} /* Stripe color */ 
        tr:hover { background-color: #480000; /* Hover highlight color */ }
@@ -196,38 +193,79 @@
   </style>
 </head>
 <body>
+    <h2>All Colleges Dashboard</h2>
 
-<h2>Select College to View Dashboard</h2>
-
+<!-- Summary Cards -->
 <div class="cards-container">
     <div class="card">
         <h2>Total Colleges</h2>
         <p>{{ total_colleges }}</p>
     </div>
     <div class="card">
+        <h2>Total Programs</h2>
+        <p>{{ total_programs }}</p>
+    </div>
+    <div class="card">
         <h2>Total Learners</h2>
         <p>{{ total_learners }}</p>
     </div>
     <div class="card">
-        <h2>Total Programs</h2>
-        <p>{{ total_programs }}</p>
+        <h2>Total Program Completions</h2>
+        <p>{{ total_program_completions }}</p>
+    </div>
+    <div class="card">
+        <h2>Onboarded Learners</h2>
+        <p>{{ total_onboarded_learners }}</p>
+    </div>
+    <div class="card">
+        <h2>Active Learners</h2>
+        <p>{{ total_active_learners }}</p>
+    </div>
+    <div class="card">
+        <h2>Beginner Completions</h2>
+        <p>{{ total_beginner_completions }}</p>
+    </div>
+    <div class="card">
+        <h2>Intermediate Completions</h2>
+        <p>{{ total_intermediate_completions }}</p>
+    </div>
+    <div class="card">
+        <h2>Advanced Completions</h2>
+        <p>{{ total_advanced_completions }}</p>
     </div>
 </div>
 
+<!-- Program Filter -->
+<div class="filter-container" style="margin-bottom: 20px;">
+    <label for="programFilter">Select Program:</label>
+    <select id="programFilter">
+        <option value="all">All Programs</option>
+        {% for pid, pname in program_names.items %}
+            <option value="{{ pid }}">{{ pname }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<!-- Search Bar -->
 <div class="search-box">
     <i class="fas fa-search"></i>
     <input type="text" id="tableSearch" placeholder="Search College...">
 </div>
 
+<!-- Colleges Table -->
 <div class="table-container">
     <table id="learnersTable" border="1">
         <thead>
             <tr>
                 <th>S.No</th>
-                <th onclick="sortTable(1, this)">College Name<span class="sort-icon">↕</span></th>
-                <th onclick="sortTable(2, this)">Number of Learners<span class="sort-icon">↕</span></th>
-                <th>Programs Count</th>
-                <th>Program Names</th>
+                <th onclick="sortTable(1, this)">College Name <span class="sort-icon">↕</span></th>
+                <th onclick="sortTable(2, this)">Learners <span class="sort-icon">↕</span></th>
+                <th onclick="sortTable(3, this)">Program Completions <span class="sort-icon">↕</span></th>
+                <th onclick="sortTable(4, this)">Onboarded <span class="sort-icon">↕</span></th>
+                <th onclick="sortTable(5, this)">Active <span class="sort-icon">↕</span></th>
+                <th onclick="sortTable(6, this)">Beginner <span class="sort-icon">↕</span></th>
+                <th onclick="sortTable(7, this)">Intermediate <span class="sort-icon">↕</span></th>
+                <th onclick="sortTable(8, this)">Advanced <span class="sort-icon">↕</span></th>
             </tr>
         </thead>
         <tbody>
@@ -240,24 +278,21 @@
                         </a>
                     </td>
                     <td>{{ college.learner_count }}</td>
-                    <td>{{ college.program_count }}</td>
-                    <td>
-                        {% for pname in college.program_names %}
-                            {{ forloop.counter }}. {{ pname }}{% if not forloop.last %}, <br> {% endif %}
-                        {% endfor %}
-                    </td>
+                    <td>{{ college.course_completion_value }}</td>
+                    <td>{{ college.onboarded_learners_count }}</td>
+                    <td>{{ college.active_learners_count }}</td>
+                    <td>{{ college.beginner_completions_count }}</td>
+                    <td>{{ college.intermediate_completions_count }}</td>
+                    <td>{{ college.advanced_completions_count }}</td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="5" style="text-align:center;">No colleges found.</td>
+                    <td colspan="11" style="text-align:center;">No colleges found.</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-
-
-
 
     
 <script>
@@ -301,19 +336,6 @@ function sortTable(columnIndex, headerElement) {
     let aText = aCell.getAttribute('data-sort-value') || aCell.textContent.trim().toLowerCase();
     let bText = bCell.getAttribute('data-sort-value') || bCell.textContent.trim().toLowerCase();
     
-    // Handle special sort values for worklog status
-    if (columnIndex === 13) { // Worklog status column
-      if (aText.includes('view')) aText = 'z'; // Sort uploaded at the end
-      if (bText.includes('view')) bText = 'z';
-      if (aText.includes('not uploaded')) aText = 'a'; // Sort not uploaded at the beginning
-      if (bText.includes('not uploaded')) bText = 'a';
-    }
-    
-    // Handle special sort values for completion status
-    if (aText.includes('yes')) aText = 'z'; // Sort 'Yes' at the end
-    if (bText.includes('yes')) bText = 'z';
-    if (aText.includes('no')) aText = 'a'; // Sort 'No' at the beginning
-    if (bText.includes('no')) bText = 'a';
     
     return aText.localeCompare(bText) * sortDirection;
   });
@@ -348,6 +370,88 @@ document.getElementById('tableSearch')?.addEventListener('keyup', function() {
     }
   });
 </script>
+
+<script>
+document.getElementById("programFilter").addEventListener("change", function () {
+    const programId = this.value;
+
+    fetch(`/dashboard/fetch-program-data/?program_id=${programId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update summary cards
+            const cards = document.querySelectorAll(".cards-container .card");
+            if (cards.length >= 9) {
+                cards[2].querySelector("p").textContent = data.summary.registered || 0;
+                cards[3].querySelector("p").textContent = data.summary.program_completed || 0;
+                cards[4].querySelector("p").textContent = data.summary.onboarded || 0;
+                cards[5].querySelector("p").textContent = data.summary.active || 0;
+                cards[6].querySelector("p").textContent = data.summary.beginner || 0;
+                cards[7].querySelector("p").textContent = data.summary.intermediate || 0;
+                cards[8].querySelector("p").textContent = data.summary.advanced || 0;
+            }
+
+            // Show or hide certain cards and columns
+            const hideExtraMetrics = programId === "3";  // Program ID 3 means hide
+
+            // Cards to hide: 5th to 9th (0-indexed)
+            [4, 5, 6, 7, 8].forEach(index => {
+                if (cards[index]) {
+                    cards[index].style.display = hideExtraMetrics ? "none" : "block";
+                }
+            });
+
+            // Table columns to hide: Onboarded (4), Active (5), Beginner (6), Intermediate (7), Advanced (8)
+            const table = document.getElementById("learnersTable");
+            const colIndexes = [4, 5, 6, 7, 8];
+
+            // Hide/show header columns
+            const ths = table.querySelectorAll("thead th");
+            colIndexes.forEach(i => {
+                if (ths[i]) {
+                    ths[i].style.display = hideExtraMetrics ? "none" : "";
+                }
+            });
+
+            // Hide/show body columns
+            const rows = table.querySelectorAll("tbody tr");
+            rows.forEach(row => {
+                const tds = row.querySelectorAll("td");
+                colIndexes.forEach(i => {
+                    if (tds[i]) {
+                        tds[i].style.display = hideExtraMetrics ? "none" : "";
+                    }
+                });
+            });
+
+            // Update table data
+            const tbody = document.querySelector("#learnersTable tbody");
+            tbody.innerHTML = "";
+            data.college_data.forEach((college, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><a href="/dashboard/college_redirect_by_l4gcode/?l4g_code=${college.l4g_code}">${college.name}</a></td>
+                    <td>${college.learners}</td>
+                    <td>${college.program_completions}</td>
+                    <td>${college.onboarded}</td>
+                    <td>${college.active}</td>
+                    <td>${college.beginner}</td>
+                    <td>${college.intermediate}</td>
+                    <td>${college.advanced}</td>
+                `;
+                const tds = row.querySelectorAll("td");
+                colIndexes.forEach(i => {
+                    if (tds[i]) {
+                        tds[i].style.display = hideExtraMetrics ? "none" : "";
+                    }
+                });
+                tbody.appendChild(row);
+            });
+        });
+});
+</script>
+
+
 
 </body>
 </html>
